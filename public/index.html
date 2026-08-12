@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#ffffff">
+<title>Пиццерия Вкуса</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="top-inner">
+    <div class="logo">🍕</div>
+    <div class="brand"><strong>Пиццерия Вкуса</strong><small>Заказ еды онлайн</small></div>
+    <button id="topCartBtn" class="top-cart" type="button">Корзина <span id="topCount">0</span></button>
+  </div>
+</header>
+
+<section id="menuView" class="view active">
+  <div class="hero"><div class="hero-box">
+    <span class="eyebrow">ПИЦЦЕРИЯ ВКУСА</span>
+    <h1>Закажи то, что реально хочется</h1>
+    <p>Пицца, роллы, вок, темпура, горячее и напитки.</p>
+  </div></div>
+  <nav id="categoryStrip" class="category-strip"></nav>
+  <main id="menuRoot" class="menu-root"></main>
+</section>
+
+<section id="cartView" class="view">
+  <main class="cart-page">
+    <div class="cart-head"><div><span class="eyebrow dark">ТВОЙ ЗАКАЗ</span><h1>Корзина</h1></div><button id="clearBtn" class="text-btn" type="button">Очистить</button></div>
+    <div id="emptyCart" class="empty"><div class="empty-icon">🛒</div><h2>Пока пусто</h2><p>Добавь что-нибудь из меню.</p><button id="goMenuBtn" class="primary" type="button">Перейти в меню</button></div>
+    <div id="cartContent" hidden>
+      <div id="cartItems"></div>
+      <section class="panel">
+        <h2>Доставка</h2>
+        <div class="field-grid">
+          <label>Имя<input id="name" type="text" placeholder="Ваше имя"></label>
+          <label>Телефон<input id="phone" type="tel" placeholder="+7 999 123-45-67"></label>
+        </div>
+        <label>Адрес<input id="address" type="text" placeholder="Улица, дом, квартира"></label>
+        <label>Комментарий<textarea id="orderNote" rows="3" placeholder="Например: позвонить за 5 минут"></textarea></label>
+      </section>
+      <section class="panel">
+        <h2>Оплата</h2>
+        <div id="paymentInfo" class="payment-info">Загружаю режим оплаты…</div>
+        <label class="pay-option"><input type="radio" name="pay" value="online" checked> 💳 Онлайн</label>
+      </section>
+      <section class="panel">
+        <div class="total-row"><span>Товары</span><strong id="subtotal">0 ₽</strong></div>
+        <div class="total-row grand"><span>Итого</span><strong id="total">0 ₽</strong></div>
+        <button id="checkoutBtn" class="checkout" type="button">Оплатить и оформить</button>
+      </section>
+    </div>
+  </main>
+</section>
+
+<section id="successView" class="view">
+  <main class="success-page">
+    <div class="success-card">
+      <div class="success-mark">✓</div>
+      <span class="eyebrow dark">ЗАКАЗ</span>
+      <h1 id="successTitle">Проверяем оплату</h1>
+      <p id="successSub">Подожди пару секунд.</p>
+      <div id="receipt"></div>
+      <button id="backMenuBtn" class="primary" type="button">Вернуться в меню</button>
+    </div>
+  </main>
+</section>
+
+<nav class="bottom-nav">
+  <button id="menuTab" class="nav-btn active" type="button"><span>🍽️</span><b>Меню</b></button>
+  <button id="cartTab" class="nav-btn" type="button"><span>🛒</span><b>Корзина</b><em id="badge" hidden>0</em></button>
+</nav>
+<script src="app.js"></script>
+</body>
+</html>
