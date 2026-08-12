@@ -63,7 +63,7 @@ function renderMenu(){
   $('categoryStrip').innerHTML=''; $('menuRoot').innerHTML='';
   MENU.forEach((section,ci)=>{
     const chip=document.createElement('button'); chip.className='cat-chip'; chip.type='button'; chip.textContent=section.category;
-    chip.onclick=()=>document.getElementById('cat-'+ci).scrollIntoView({behavior:'smooth'}); $('categoryStrip').appendChild(chip);
+    chip.onclick=()=>{document.querySelectorAll('.cat-chip').forEach(x=>x.classList.remove('active'));chip.classList.add('active');document.getElementById('cat-'+ci).scrollIntoView({behavior:'smooth'});}; if(ci===0) chip.classList.add('active'); $('categoryStrip').appendChild(chip);
     const sec=document.createElement('section'); sec.className='menu-section'; sec.id='cat-'+ci;
     sec.innerHTML=`<h2>${esc(section.category)}</h2><div class="food-grid"></div>`;
     const grid=sec.querySelector('.food-grid');

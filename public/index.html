@@ -3,53 +3,106 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#ffffff">
-<title>Пиццерия Вкуса</title>
+<meta name="theme-color" content="#fffaf5">
+<title>Пиццерия Вкуса — доставка</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <header class="topbar">
   <div class="top-inner">
-    <div class="logo">🍕</div>
-    <div class="brand"><strong>Пиццерия Вкуса</strong><small>Заказ еды онлайн</small></div>
-    <button id="topCartBtn" class="top-cart" type="button">Корзина <span id="topCount">0</span></button>
+    <button class="brand-button" type="button" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+      <div class="logo">V</div>
+      <div class="brand">
+        <strong>Пиццерия Вкуса</strong>
+        <small><i></i> Принимаем заказы</small>
+      </div>
+    </button>
+
+    <button id="topCartBtn" class="top-cart" type="button">
+      <span class="cart-icon">🛍️</span>
+      <span>Корзина</span>
+      <b id="topCount">0</b>
+    </button>
   </div>
 </header>
 
 <section id="menuView" class="view active">
-  <div class="hero"><div class="hero-box">
-    <span class="eyebrow">ПИЦЦЕРИЯ ВКУСА</span>
-    <h1>Закажи то, что реально хочется</h1>
-    <p>Пицца, роллы, вок, темпура, горячее и напитки.</p>
-  </div></div>
-  <nav id="categoryStrip" class="category-strip"></nav>
-  <main id="menuRoot" class="menu-root"></main>
+  <main>
+    <section class="hero">
+      <div class="hero-copy">
+        <span class="eyebrow">ДОСТАВКА • САМОВЫВОЗ</span>
+        <h1>Еда, которую хочется <em>прямо сейчас.</em></h1>
+        <p>Пицца, роллы, вок и горячее. Собери заказ за пару минут — пожелания к каждому блюду можно указать в корзине.</p>
+        <div class="hero-pills">
+          <span>⚡ Быстрый заказ</span>
+          <span>✍️ Пожелания к блюдам</span>
+          <span>🔒 Безопасная оплата</span>
+        </div>
+      </div>
+      <div class="hero-art" aria-hidden="true">
+        <div class="plate plate-main">🍕</div>
+        <div class="plate plate-small">🍣</div>
+        <div class="spark s1">✦</div>
+        <div class="spark s2">✦</div>
+      </div>
+    </section>
+
+    <section class="service-row">
+      <div class="service-card"><span>🛵</span><div><b>Доставка</b><small>Адрес укажешь при заказе</small></div></div>
+      <div class="service-card"><span>🔥</span><div><b>Готовим после заказа</b><small>Никакой еды «с витрины»</small></div></div>
+      <div class="service-card"><span>💬</span><div><b>Заказ сразу администратору</b><small>После подтверждения оплаты</small></div></div>
+    </section>
+
+    <div class="menu-heading">
+      <div><span class="eyebrow dark">МЕНЮ</span><h2>Что будешь?</h2></div>
+      <p>Выбирай категорию или листай всё меню</p>
+    </div>
+
+    <nav id="categoryStrip" class="category-strip"></nav>
+    <section id="menuRoot" class="menu-root"></section>
+  </main>
 </section>
 
 <section id="cartView" class="view">
   <main class="cart-page">
-    <div class="cart-head"><div><span class="eyebrow dark">ТВОЙ ЗАКАЗ</span><h1>Корзина</h1></div><button id="clearBtn" class="text-btn" type="button">Очистить</button></div>
-    <div id="emptyCart" class="empty"><div class="empty-icon">🛒</div><h2>Пока пусто</h2><p>Добавь что-нибудь из меню.</p><button id="goMenuBtn" class="primary" type="button">Перейти в меню</button></div>
+    <button id="goMenuBtn" class="back-link" type="button">← Назад в меню</button>
+
+    <div class="cart-head">
+      <div><span class="eyebrow dark">ТВОЙ ЗАКАЗ</span><h1>Корзина</h1></div>
+      <button id="clearBtn" class="text-btn" type="button">Очистить</button>
+    </div>
+
+    <div id="emptyCart" class="empty">
+      <div class="empty-icon">🛍️</div>
+      <h2>Пока ничего нет</h2>
+      <p>Добавь блюда из меню — они появятся здесь.</p>
+      <button class="primary" type="button" onclick="document.getElementById('goMenuBtn').click()">Посмотреть меню</button>
+    </div>
+
     <div id="cartContent" hidden>
-      <div id="cartItems"></div>
+      <div id="cartItems" class="cart-items"></div>
+
       <section class="panel">
-        <h2>Доставка</h2>
+        <div class="panel-title"><span>📍</span><div><h2>Куда доставить?</h2><p>Оставь данные для связи</p></div></div>
         <div class="field-grid">
-          <label>Имя<input id="name" type="text" placeholder="Ваше имя"></label>
-          <label>Телефон<input id="phone" type="tel" placeholder="+7 999 123-45-67"></label>
+          <label>Имя<input id="name" type="text" autocomplete="name" placeholder="Как к вам обращаться"></label>
+          <label>Телефон<input id="phone" type="tel" autocomplete="tel" placeholder="+7 999 123-45-67"></label>
         </div>
-        <label>Адрес<input id="address" type="text" placeholder="Улица, дом, квартира"></label>
-        <label>Комментарий<textarea id="orderNote" rows="3" placeholder="Например: позвонить за 5 минут"></textarea></label>
+        <label>Адрес<input id="address" type="text" autocomplete="street-address" placeholder="Улица, дом, квартира"></label>
+        <label>Комментарий<textarea id="orderNote" rows="3" placeholder="Домофон, подъезд, позвонить за 5 минут и т.д."></textarea></label>
       </section>
+
       <section class="panel">
-        <h2>Оплата</h2>
+        <div class="panel-title"><span>💳</span><div><h2>Оплата</h2><p>Статус платёжного модуля</p></div></div>
         <div id="paymentInfo" class="payment-info">Загружаю режим оплаты…</div>
-        <label class="pay-option"><input type="radio" name="pay" value="online" checked> 💳 Онлайн</label>
+        <label class="pay-option"><input type="radio" name="pay" value="online" checked><span>Онлайн-оплата</span><b>→</b></label>
       </section>
-      <section class="panel">
+
+      <section class="checkout-card">
         <div class="total-row"><span>Товары</span><strong id="subtotal">0 ₽</strong></div>
         <div class="total-row grand"><span>Итого</span><strong id="total">0 ₽</strong></div>
         <button id="checkoutBtn" class="checkout" type="button">Оплатить и оформить</button>
+        <small>Нажимая кнопку, ты подтверждаешь состав заказа и данные доставки.</small>
       </section>
     </div>
   </main>
@@ -69,9 +122,10 @@
 </section>
 
 <nav class="bottom-nav">
-  <button id="menuTab" class="nav-btn active" type="button"><span>🍽️</span><b>Меню</b></button>
-  <button id="cartTab" class="nav-btn" type="button"><span>🛒</span><b>Корзина</b><em id="badge" hidden>0</em></button>
+  <button id="menuTab" class="nav-btn active" type="button"><span>⌂</span><b>Меню</b></button>
+  <button id="cartTab" class="nav-btn" type="button"><span>🛍️</span><b>Корзина</b><em id="badge" hidden>0</em></button>
 </nav>
+
 <script src="app.js"></script>
 </body>
 </html>
