@@ -51,11 +51,15 @@ function updateBadge(){
   $('badge').textContent = count; $('badge').hidden = count === 0; $('topCount').textContent = count;
 }
 function showView(name){
-  ['menuView','cartView','successView'].forEach(id => $(id).classList.remove('active'));
+  ['menuView','cartView','profileView','successView'].forEach(id => $(id).classList.remove('active'));
   $(name+'View').classList.add('active');
-  $('menuTab').classList.toggle('active', name==='menu'); $('cartTab').classList.toggle('active', name==='cart');
+  $('menuTab').classList.toggle('active', name==='menu');
+  $('profileTab').classList.toggle('active', name==='profile');
+  $('cartTab').classList.toggle('active', name==='cart');
   document.querySelector('.bottom-nav').style.display = name==='success' ? 'none' : 'grid';
-  if(name==='cart') renderCart(); window.scrollTo(0,0);
+  if(name==='cart') renderCart();
+  if(name==='profile') loadProfile();
+  window.scrollTo(0,0);
 }
 
 function iconFor(cat){ if(cat==='Пицца') return '🍕'; if(cat.includes('роллы') || cat==='Темпура') return '🍣'; if(cat==='Вок') return '🍜'; if(cat==='Напитки') return '☕'; return '🍽️'; }
@@ -88,18 +92,166 @@ function renderCart(){
   });
   $('subtotal').textContent=money(total()); $('total').textContent=money(total());
 }
+
+function statusLabel(status){
+  return ({
+    new:'Принят',
+    cooking:'Готовится',
+    courier:'В пути',
+    delivered:'Доставлен',
+    cancelled:'Отменён',
+    paid:'Оплачен'
+  })[status] || status || 'Принят';
+}
+
+function renderOrderHistory(orders){
+  const list=$('orderHistory');
+  list.innerHTML='';
+  $('historyCount').textContent=orders.length;
+  $('historyEmpty').hidden=orders.length>0;
+
+  orders.forEach(o=>{
+    const el=document.createElement('article');
+    el.className='history-order';
+    const created=o.created_at ? new Date(o.created_at).toLocaleString('ru-RU') : '';
+    const items=Array.isArray(o.items)?o.items:[];
+    el.innerHTML=`
+      <div>
+        <b>Заказ #${esc(String(o.number||o.id||'').slice(-6))}</b>
+        <small>${esc(created)}</small>
+      </div>
+      <strong>${money(Number(o.total)||0)}</strong>
+      <p>${items.map(x=>`${esc(x.name)} × ${Number(x.qty)||1}`).join(', ')}</p>
+      <span>${esc(statusLabel(o.status))}</span>
+    `;
+    list.appendChild(el);
+  });
+}
+
+async function loadProfile(){
+  const loginBox=$('loginBox');
+  const profileBox=$('profileBox');
+  const loginMsg=$('loginMsg');
+
+  try{
+    const r=await fetch('/api/me');
+    if(r.status===401){
+      loginBox.hidden=false;
+      profileBox.hidden=true;
+      $('authTitle').textContent='Войти';
+      $('profileGreeting').textContent='Ваш профиль';
+      renderOrderHistory([]);
+      return;
+    }
+    const j=await r.json();
+    if(!r.ok) throw new Error(j.error||'Не удалось загрузить профиль');
+
+    const u=j.user||{};
+    loginBox.hidden=true;
+    profileBox.hidden=false;
+    $('authTitle').textContent=u.phone||'Профиль';
+    $('profileGreeting').textContent=u.name ? `Привет, ${u.name}` : 'Ваш профиль';
+    $('profileName').value=u.name||'';
+    $('profileAddress').value=u.address||'';
+
+    const or=await fetch('/api/my-orders');
+    if(or.status===401){
+      renderOrderHistory([]);
+      return;
+    }
+    const oj=await or.json();
+    if(!or.ok) throw new Error(oj.error||'Не удалось загрузить заказы');
+    renderOrderHistory(oj.orders||[]);
+  }catch(e){
+    if(loginMsg) loginMsg.textContent=e.message;
+  }
+}
+
+async function sendLoginCode(){
+  const phone=$('loginPhone').value.trim();
+  if(!phone){$('loginMsg').textContent='Введите номер телефона.';return}
+  $('sendCodeBtn').disabled=true;
+  try{
+    const r=await fetch('/api/auth/send-code',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({phone})
+    });
+    const j=await r.json();
+    if(!r.ok) throw new Error(j.error||'Не удалось отправить код');
+    $('loginMsg').textContent=j.message||'Код отправлен.';
+  }catch(e){
+    $('loginMsg').textContent=e.message;
+  }finally{
+    $('sendCodeBtn').disabled=false;
+  }
+}
+
+async function verifyLoginCode(){
+  const phone=$('loginPhone').value.trim();
+  const code=$('loginCode').value.trim();
+  if(!phone||!code){$('loginMsg').textContent='Введите номер и код.';return}
+  $('verifyCodeBtn').disabled=true;
+  try{
+    const r=await fetch('/api/auth/verify-code',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({phone,code})
+    });
+    const j=await r.json();
+    if(!r.ok) throw new Error(j.error||'Не удалось войти');
+    $('loginMsg').textContent='';
+    await loadProfile();
+  }catch(e){
+    $('loginMsg').textContent=e.message;
+  }finally{
+    $('verifyCodeBtn').disabled=false;
+  }
+}
+
+async function saveProfile(){
+  $('saveProfileBtn').disabled=true;
+  try{
+    const r=await fetch('/api/me',{
+      method:'PUT',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        name:$('profileName').value.trim(),
+        address:$('profileAddress').value.trim()
+      })
+    });
+    const j=await r.json();
+    if(!r.ok) throw new Error(j.error||'Не удалось сохранить');
+    $('profileSaved').hidden=false;
+    setTimeout(()=>$('profileSaved').hidden=true,1500);
+    await loadProfile();
+  }catch(e){
+    alert('Не удалось сохранить профиль: '+e.message);
+  }finally{
+    $('saveProfileBtn').disabled=false;
+  }
+}
+
+async function logoutProfile(){
+  try{
+    await fetch('/api/auth/logout',{method:'POST'});
+  }finally{
+    await loadProfile();
+  }
+}
+
 async function loadConfig(){
-  try{const r=await fetch('/api/config');const j=await r.json();demoMode=!!j.demoMode;const online=!!j.onlinePaymentConfigured||demoMode;const op=$('onlinePayOption');if(op)op.hidden=!online;$('paymentInfo').textContent=online?(demoMode?'Демо-оплата доступна. Также можно выбрать оплату при получении.':'Можно оплатить онлайн или при получении.'):'Онлайн-оплата пока не подключена. Доступна оплата при получении.';}catch{$('paymentInfo').textContent='Не удалось получить настройки сервера.';}
+  try{const r=await fetch('/api/config');const j=await r.json();demoMode=!!j.demoMode;$('paymentInfo').textContent=demoMode?'Демо-режим: деньги не списываются, но весь путь заказа работает.':'Боевой режим ЮKassa: после оплаты подтверждённый заказ уйдёт администратору.';}catch{$('paymentInfo').textContent='Не удалось получить настройки сервера.';}
 }
 async function checkout(){
   const name=$('name').value.trim(), phone=$('phone').value.trim(), address=$('address').value.trim(); if(!name||!phone||!address){alert('Заполни имя, телефон и адрес.');return;}
   const items=Object.values(cart).map(x=>({id:x.id,qty:x.qty,note:x.note})); if(!items.length){alert('Корзина пустая.');return;}
   $('checkoutBtn').disabled=true; $('checkoutBtn').textContent='Создаём заказ…';
   try{
-    const r=await fetch('/api/create-order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({items,payment_method:(document.querySelector('input[name=pay]:checked')||{}).value||'cash',customer:{name,phone,address,comment:$('orderNote').value.trim()}})}); const j=await r.json(); if(!r.ok) throw new Error(j.error||'Ошибка');
+    const r=await fetch('/api/create-order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({items,customer:{name,phone,address,comment:$('orderNote').value.trim()}})}); const j=await r.json(); if(!r.ok) throw new Error(j.error||'Ошибка');
     if(j.redirectUrl){ window.location.href=j.redirectUrl; return; }
     throw new Error('Нет ссылки на оплату');
-  }catch(e){alert('Не получилось оформить: '+e.message);$('checkoutBtn').disabled=false;$('checkoutBtn').textContent='Оформить заказ';}
+  }catch(e){alert('Не получилось оформить: '+e.message);$('checkoutBtn').disabled=false;$('checkoutBtn').textContent='Оплатить и оформить';}
 }
 async function loadSuccess(orderId){
   showView('success');
@@ -111,7 +263,26 @@ async function loadSuccess(orderId){
   }catch(e){$('successTitle').textContent='Не удалось проверить заказ';$('successSub').textContent=e.message;}
 }
 
-$('menuTab').onclick=()=>showView('menu'); $('cartTab').onclick=()=>showView('cart'); $('topCartBtn').onclick=()=>showView('cart'); $('goMenuBtn').onclick=()=>showView('menu'); $('backMenuBtn').onclick=()=>showView('menu');
-$('clearBtn').onclick=()=>{if(Object.keys(cart).length&&confirm('Очистить корзину?')){cart={};saveCart();renderCart();}}; $('checkoutBtn').onclick=checkout;
-renderMenu(); updateBadge(); loadConfig();
-const qs=new URLSearchParams(location.search); if(qs.get('payment_return')==='1'&&qs.get('order_id')) loadSuccess(qs.get('order_id'));
+$('menuTab').onclick=()=>showView('menu');
+$('profileTab').onclick=()=>showView('profile');
+$('cartTab').onclick=()=>showView('cart');
+$('topProfileBtn').onclick=()=>showView('profile');
+$('heroProfileBtn').onclick=()=>showView('profile');
+$('topCartBtn').onclick=()=>showView('cart');
+$('goMenuBtn').onclick=()=>showView('menu');
+$('backMenuBtn').onclick=()=>showView('menu');
+
+$('sendCodeBtn').onclick=sendLoginCode;
+$('verifyCodeBtn').onclick=verifyLoginCode;
+$('saveProfileBtn').onclick=saveProfile;
+$('logoutBtn').onclick=logoutProfile;
+
+$('clearBtn').onclick=()=>{if(Object.keys(cart).length&&confirm('Очистить корзину?')){cart={};saveCart();renderCart();}};
+$('checkoutBtn').onclick=checkout;
+
+renderMenu();
+updateBadge();
+loadConfig();
+
+const qs=new URLSearchParams(location.search);
+if(qs.get('payment_return')==='1'&&qs.get('order_id')) loadSuccess(qs.get('order_id'));
