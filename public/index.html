@@ -10,57 +10,40 @@
 <body>
 <header class="topbar">
   <div class="top-inner">
-    <button class="brand-button" type="button" id="brandBtn">
-      <div class="logo"><span>V</span></div>
+    <button class="brand-button" type="button" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+      <div class="logo">V</div>
       <div class="brand">
         <strong>Пиццерия Вкуса</strong>
         <small><i></i> Принимаем заказы</small>
       </div>
     </button>
 
-    <div class="top-actions">
-      <button id="topProfileBtn" class="top-icon-btn" type="button" aria-label="Профиль">
-        <span>◉</span>
-      </button>
-      <button id="topCartBtn" class="top-cart" type="button">
-        <span class="cart-icon">🛍</span>
-        <span>Корзина</span>
-        <b id="topCount">0</b>
-      </button>
-    </div>
+    <button id="topCartBtn" class="top-cart" type="button">
+      <span class="cart-icon">🛍️</span>
+      <span>Корзина</span>
+      <b id="topCount">0</b>
+    </button>
   </div>
 </header>
 
 <section id="menuView" class="view active">
   <main>
-    <section class="hero luxury-hero">
+    <section class="hero">
       <div class="hero-copy">
-        <div class="hero-topline">
-          <span class="eyebrow">ПРЕМИАЛЬНАЯ ДОСТАВКА</span>
-          <span class="hero-rating">★ 4.9</span>
-        </div>
-        <h1>Вкус, который<br><em>хочется повторить.</em></h1>
-        <p>Пицца, роллы и горячие блюда — аккуратно собраны в одном меню. Заказ занимает меньше минуты.</p>
-        <div class="hero-cta-row">
-          <button id="heroMenuBtn" class="hero-primary" type="button">Смотреть меню</button>
-          <button id="heroProfileBtn" class="hero-secondary" type="button">Мои заказы</button>
-        </div>
+        <span class="eyebrow">ДОСТАВКА • САМОВЫВОЗ</span>
+        <h1>Еда, которую хочется <em>прямо сейчас.</em></h1>
+        <p>Пицца, роллы, вок и горячее. Собери заказ за пару минут — пожелания к каждому блюду можно указать в корзине.</p>
         <div class="hero-pills">
-          <span>✦ Готовим после заказа</span>
-          <span>✦ Быстрая доставка</span>
-          <span>✦ Заказ в Telegram</span>
+          <span>⚡ Быстрый заказ</span>
+          <span>✍️ Пожелания к блюдам</span>
+          <span>🔒 Безопасная оплата</span>
         </div>
       </div>
       <div class="hero-art" aria-hidden="true">
-        <div class="hero-orbit orbit-a"></div>
-        <div class="hero-orbit orbit-b"></div>
-        <div class="hero-dish hero-dish-main">🍕</div>
-        <div class="hero-dish hero-dish-small">🍣</div>
-        <div class="hero-glass-card">
-          <small>ПОПУЛЯРНО СЕГОДНЯ</small>
-          <strong>Филадельфия</strong>
-          <span>от 400 ₽</span>
-        </div>
+        <div class="plate plate-main">🍕</div>
+        <div class="plate plate-small">🍣</div>
+        <div class="spark s1">✦</div>
+        <div class="spark s2">✦</div>
       </div>
     </section>
 
@@ -70,18 +53,9 @@
       <div class="service-card"><span>💬</span><div><b>Заказ сразу администратору</b><small>После подтверждения оплаты</small></div></div>
     </section>
 
-    <section class="hits-section">
-      <div class="section-kicker">ВЫБОР ГОСТЕЙ</div>
-      <div class="hits-head">
-        <div><h2>Хиты продаж</h2><p>То, что заказывают чаще всего</p></div>
-        <span class="hits-badge">TOP</span>
-      </div>
-      <div id="hitsGrid" class="hits-grid"></div>
-    </section>
-
     <div class="menu-heading">
       <div><span class="eyebrow dark">МЕНЮ</span><h2>Что будешь?</h2></div>
-      <p>Для каждого блюда — своя подходящая картинка</p>
+      <p>Выбирай категорию или листай всё меню</p>
     </div>
 
     <nav id="categoryStrip" class="category-strip"></nav>
@@ -121,7 +95,9 @@
       <section class="panel">
         <div class="panel-title"><span>💳</span><div><h2>Оплата</h2><p>Статус платёжного модуля</p></div></div>
         <div id="paymentInfo" class="payment-info">Загружаю режим оплаты…</div>
-        <label class="pay-option"><input type="radio" name="pay" value="online" checked><span>Онлайн-оплата</span><b>→</b></label>
+        <label class="pay-option"><input type="radio" name="pay" value="cash" checked><span>Наличными при получении</span><b>→</b></label>
+        <label class="pay-option"><input type="radio" name="pay" value="card"><span>Картой при получении</span><b>→</b></label>
+        <label class="pay-option" id="onlinePayOption"><input type="radio" name="pay" value="online"><span>Онлайн-оплата</span><b>→</b></label>
       </section>
 
       <section class="checkout-card">
@@ -130,70 +106,6 @@
         <button id="checkoutBtn" class="checkout" type="button">Оплатить и оформить</button>
         <small>Нажимая кнопку, ты подтверждаешь состав заказа и данные доставки.</small>
       </section>
-    </div>
-  </main>
-</section>
-
-
-<section id="profileView" class="view">
-  <main class="profile-page">
-    <div class="profile-hero">
-      <div class="profile-avatar">V</div>
-      <div class="profile-title">
-        <span class="eyebrow">ЛИЧНЫЙ КАБИНЕТ</span>
-        <h1 id="profileGreeting">Ваш профиль</h1>
-        <p>Данные для быстрого заказа и настоящая история покупок с сервера.</p>
-      </div>
-    </div>
-
-    <section id="authGate" class="auth-gate">
-      <div class="auth-icon">✦</div>
-      <span class="mini-label">ВХОД ПО НОМЕРУ</span>
-      <h2>Ваш профиль и заказы — на любом устройстве</h2>
-      <p>Введите номер телефона. Мы отправим одноразовый код по SMS.</p>
-      <div id="phoneStep" class="auth-step">
-        <input id="authPhone" type="tel" inputmode="tel" placeholder="+7 999 123-45-67">
-        <button id="sendCodeBtn" type="button">Получить код</button>
-      </div>
-      <div id="codeStep" class="auth-step" hidden>
-        <input id="authCode" type="text" inputmode="numeric" maxlength="8" placeholder="Код из SMS">
-        <button id="verifyCodeBtn" type="button">Войти</button>
-        <button id="changePhoneBtn" class="auth-link" type="button">Изменить номер</button>
-      </div>
-      <p id="authMessage" class="auth-message"></p>
-    </section>
-
-    <div id="profileContent" hidden>
-      <div class="profile-session-row">
-        <span id="profilePhoneBadge"></span>
-        <button id="logoutBtn" type="button">Выйти</button>
-      </div>
-    <div class="profile-layout">
-      <section class="profile-card">
-        <div class="profile-card-head">
-          <div><span class="mini-label">МОИ ДАННЫЕ</span><h2>Быстрое оформление</h2></div>
-          <span class="profile-lock">⌁</span>
-        </div>
-        <label>Имя<input id="profileName" type="text" autocomplete="name" placeholder="Ваше имя"></label>
-        <label>Телефон<input id="profilePhone" type="tel" readonly></label>
-        <label>Адрес по умолчанию<input id="profileAddress" type="text" autocomplete="street-address" placeholder="Улица, дом, квартира"></label>
-        <button id="saveProfileBtn" class="profile-save" type="button">Сохранить данные</button>
-        <p id="profileSaved" class="save-note" hidden>✓ Данные сохранены</p>
-      </section>
-
-      <section class="history-card">
-        <div class="history-head">
-          <div><span class="mini-label">ИСТОРИЯ</span><h2>Мои заказы</h2></div>
-          <span id="historyCount" class="history-count">0</span>
-        </div>
-        <div id="historyEmpty" class="history-empty">
-          <div>🧾</div>
-          <strong>Заказов пока нет</strong>
-          <p>После первого оформления он появится здесь.</p>
-        </div>
-        <div id="orderHistory" class="order-history"></div>
-      </section>
-    </div>
     </div>
   </main>
 </section>
@@ -213,8 +125,7 @@
 
 <nav class="bottom-nav">
   <button id="menuTab" class="nav-btn active" type="button"><span>⌂</span><b>Меню</b></button>
-  <button id="profileTab" class="nav-btn" type="button"><span>◉</span><b>Профиль</b></button>
-  <button id="cartTab" class="nav-btn" type="button"><span>🛍</span><b>Корзина</b><em id="badge" hidden>0</em></button>
+  <button id="cartTab" class="nav-btn" type="button"><span>🛍️</span><b>Корзина</b><em id="badge" hidden>0</em></button>
 </nav>
 
 <script src="app.js"></script>
