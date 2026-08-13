@@ -1,258 +1,61 @@
-import http from 'node:http';
-import fs from 'node:fs';
-import fsp from 'node:fs/promises';
-import path from 'node:path';
-import crypto from 'node:crypto';
-import { fileURLToPath } from 'node:url';
+const express=require('express');
+const {Pool}=require('pg');
+const {randomUUID,createHmac,timingSafeEqual}=require('node:crypto');
+const path=require('node:path');
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const PUBLIC = path.join(__dirname, 'public');
-const DATA_FILE = path.join(__dirname, 'orders.json');
+const app=express();app.use(express.json({limit:'1mb'}));app.use(express.urlencoded({extended:false}));
+const PORT=process.env.PORT||3000,DATABASE_URL=process.env.DATABASE_URL||'',SESSION_SECRET=process.env.SESSION_SECRET||'change-me-before-production';
+const DEMO_PAYMENT=process.env.DEMO_PAYMENT!=='false',ADMIN_USER=process.env.ADMIN_USER||'admin',ADMIN_PASSWORD=process.env.ADMIN_PASSWORD||'change-me';
+const DEV_AUTH_CODE=process.env.DEV_AUTH_CODE||'',TG_TOKEN=process.env.TELEGRAM_BOT_TOKEN||'',TG_CHAT_ID=process.env.TELEGRAM_CHAT_ID||'';
+const TWILIO_ACCOUNT_SID=process.env.TWILIO_ACCOUNT_SID||'',TWILIO_AUTH_TOKEN=process.env.TWILIO_AUTH_TOKEN||'',TWILIO_VERIFY_SERVICE_SID=process.env.TWILIO_VERIFY_SERVICE_SID||'';
+const pool=DATABASE_URL?new Pool({connectionString:DATABASE_URL,ssl:DATABASE_URL.includes('localhost')?false:{rejectUnauthorized:false}}):null;
+const memory={users:[],products:[],orders:[]};
+const SEED_PRODUCTS=[{"id": "p-0-0", "category": "Пицца", "name": "Маргарита", "price": 400, "description": "Тесто, соус из свежих томатов, сыр моцарелла, помидор, базилик", "image_url": "", "active": true, "sort_order": 0}, {"id": "p-0-1", "category": "Пицца", "name": "Пепперони", "price": 450, "description": "Тесто, томатный соус, моцарелла, перец, маслины, пепперони, орегано", "image_url": "", "active": true, "sort_order": 1}, {"id": "p-0-2", "category": "Пицца", "name": "4 сыра", "price": 450, "description": "Сливочный соус, моцарелла, гауда, дор блю, пармезан", "image_url": "", "active": true, "sort_order": 2}, {"id": "p-0-3", "category": "Пицца", "name": "Курица с грибами", "price": 450, "description": "Сливочный соус, куриное филе, шампиньоны, зелень", "image_url": "", "active": true, "sort_order": 3}, {"id": "p-0-4", "category": "Пицца", "name": "Охотничья", "price": 450, "description": "Сливочный и томатный соус, куриное филе, охотничьи колбаски, лук, зелень", "image_url": "", "active": true, "sort_order": 4}, {"id": "p-0-5", "category": "Пицца", "name": "BBQ с барбекю", "price": 450, "description": "Соус BBQ, томатный соус, грибы, лук, говядина", "image_url": "", "active": true, "sort_order": 5}, {"id": "p-0-6", "category": "Пицца", "name": "Мясная", "price": 450, "description": "Томатный соус, колбаски, курица, говядина, лук, помидоры", "image_url": "", "active": true, "sort_order": 6}, {"id": "p-0-7", "category": "Пицца", "name": "Груша горгонзола", "price": 350, "description": "Сливочный соус, груша, горгонзола, орехи, карамель", "image_url": "", "active": true, "sort_order": 7}, {"id": "p-0-8", "category": "Пицца", "name": "Деревенская", "price": 450, "description": "Моцарелла, сливочный соус, ветчина, сервелат, грибы, помидоры, курица", "image_url": "", "active": true, "sort_order": 8}, {"id": "p-0-9", "category": "Пицца", "name": "С морепродуктами", "price": 450, "description": "Лосось, краб, мидии, сливочный соус, пармезан", "image_url": "", "active": true, "sort_order": 9}, {"id": "p-0-10", "category": "Пицца", "name": "Гавайская", "price": 400, "description": "Моцарелла, томатный соус, ананас, ветчина, куриное филе", "image_url": "", "active": true, "sort_order": 10}, {"id": "p-0-11", "category": "Пицца", "name": "Perfecto острая", "price": 450, "description": "Моцарелла, соусы, грибы, говядина, перец, колбаски, курица, спайси", "image_url": "", "active": true, "sort_order": 11}, {"id": "p-0-12", "category": "Пицца", "name": "С ветчиной и грибами", "price": 400, "description": "Моцарелла, томатный соус, ветчина, грибы", "image_url": "", "active": true, "sort_order": 12}, {"id": "p-0-13", "category": "Пицца", "name": "Ассорти", "price": 450, "description": "Сливочный и томатный соус, моцарелла, грибы, лук, курица, колбаски", "image_url": "", "active": true, "sort_order": 13}, {"id": "p-0-14", "category": "Пицца", "name": "Поло", "price": 450, "description": "Томатный и сливочный соус, моцарелла, перец, лук, куриное филе", "image_url": "", "active": true, "sort_order": 14}, {"id": "p-0-15", "category": "Пицца", "name": "Мексика", "price": 450, "description": "Томатный соус, чили, моцарелла, перец, колбаски, халапеньо, кукуруза, курица", "image_url": "", "active": true, "sort_order": 15}, {"id": "p-0-16", "category": "Пицца", "name": "Куриная", "price": 400, "description": "Сливочный соус, куриное филе, помидоры, зелень", "image_url": "", "active": true, "sort_order": 16}, {"id": "p-0-17", "category": "Пицца", "name": "Цезарь", "price": 400, "description": "Сливочный соус, куриное филе, помидоры, листья салата, соус Цезарь", "image_url": "", "active": true, "sort_order": 17}, {"id": "p-1-0", "category": "Холодные роллы", "name": "Филадельфия", "price": 350, "description": "Сыр, огурец, сливочный сыр, лосось", "image_url": "", "active": true, "sort_order": 100}, {"id": "p-1-1", "category": "Холодные роллы", "name": "Филадельфия карамель", "price": 300, "description": "Сыр, огурец, сливочный сыр, лосось, тростниковый сахар", "image_url": "", "active": true, "sort_order": 101}, {"id": "p-1-2", "category": "Холодные роллы", "name": "Филадельфия с угрем", "price": 350, "description": "Сыр, нори, огурец, угорь, унаги, кунжут", "image_url": "", "active": true, "sort_order": 102}, {"id": "p-1-3", "category": "Холодные роллы", "name": "Калифорния", "price": 300, "description": "Сыр, краб, огурец, тобико, нори", "image_url": "", "active": true, "sort_order": 103}, {"id": "p-1-4", "category": "Холодные роллы", "name": "Калифорния с угрем", "price": 350, "description": "Сыр, угорь, огурец, нори, тобико", "image_url": "", "active": true, "sort_order": 104}, {"id": "p-1-5", "category": "Холодные роллы", "name": "Калифорния с лососем", "price": 350, "description": "Сыр, огурец, лосось, тобико, нори", "image_url": "", "active": true, "sort_order": 105}, {"id": "p-2-0", "category": "Запечённые роллы", "name": "Запечённый лосось", "price": 350, "description": "Нори, рис, лосось, соус хот, унаги, кунжут", "image_url": "", "active": true, "sort_order": 200}, {"id": "p-2-1", "category": "Запечённые роллы", "name": "Запечённый угорь", "price": 350, "description": "Нори, рис, сыр, угорь, соус хот", "image_url": "", "active": true, "sort_order": 201}, {"id": "p-2-2", "category": "Запечённые роллы", "name": "Запечённый краб", "price": 300, "description": "Нори, рис, краб, сыр, соус хот", "image_url": "", "active": true, "sort_order": 202}, {"id": "p-2-3", "category": "Запечённые роллы", "name": "Запечённые мидии", "price": 300, "description": "Нори, рис, мидии, сыр, соус хот, моцарелла", "image_url": "", "active": true, "sort_order": 203}, {"id": "p-2-4", "category": "Запечённые роллы", "name": "Запечённый Хот лосось", "price": 350, "description": "Нори, рис, сыр, огурец, лосось, краб, соус хот", "image_url": "", "active": true, "sort_order": 204}, {"id": "p-2-5", "category": "Запечённые роллы", "name": "Запечённый Хот угорь", "price": 350, "description": "Нори, рис, сыр, огурец, угорь, краб, соус хот", "image_url": "", "active": true, "sort_order": 205}, {"id": "p-2-6", "category": "Запечённые роллы", "name": "Запечённый Хот мидии", "price": 350, "description": "Нори, рис, сыр, огурец, мидии, краб, соус хот", "image_url": "", "active": true, "sort_order": 206}, {"id": "p-2-7", "category": "Запечённые роллы", "name": "Запечённая креветка", "price": 350, "description": "Нори, рис, сыр, огурец, креветка, унаги, кунжут", "image_url": "", "active": true, "sort_order": 207}, {"id": "p-2-8", "category": "Запечённые роллы", "name": "Запечённая Филадельфия", "price": 400, "description": "Сыр, огурец, нори, лосось, яки соус, унаги", "image_url": "", "active": true, "sort_order": 208}, {"id": "p-2-9", "category": "Запечённые роллы", "name": "Запечённая курица", "price": 300, "description": "Нори, рис, сыр, огурец, курица, соус", "image_url": "", "active": true, "sort_order": 209}, {"id": "p-3-0", "category": "Темпура", "name": "Темпура хакайна", "price": 350, "description": "Нори, рис, лосось, краб, соус хот, унаги, кунжут, кляр", "image_url": "", "active": true, "sort_order": 300}, {"id": "p-3-1", "category": "Темпура", "name": "Темпура угорь", "price": 350, "description": "Нори, рис, сыр, угорь, соус хот, кляр", "image_url": "", "active": true, "sort_order": 301}, {"id": "p-3-2", "category": "Темпура", "name": "Темпура краб", "price": 300, "description": "Нори, рис, краб, сыр, соус хот, кляр", "image_url": "", "active": true, "sort_order": 302}, {"id": "p-3-3", "category": "Темпура", "name": "Темпура мидии", "price": 300, "description": "Нори, рис, мидии, сыр, соус хот, моцарелла, кляр", "image_url": "", "active": true, "sort_order": 303}, {"id": "p-3-4", "category": "Темпура", "name": "Темпура креветка", "price": 350, "description": "Нори, рис, сыр, огурец, креветка, унаги, кунжут, кляр", "image_url": "", "active": true, "sort_order": 304}, {"id": "p-3-5", "category": "Темпура", "name": "Темпура Филадельфия", "price": 350, "description": "Сыр, огурец, нори, сливочный сыр, лосось, яки, унаги, кляр", "image_url": "", "active": true, "sort_order": 305}, {"id": "p-3-6", "category": "Темпура", "name": "Темпура курица", "price": 300, "description": "Нори, рис, сыр, огурец, курица, соус, кляр", "image_url": "", "active": true, "sort_order": 306}, {"id": "p-4-0", "category": "Вок", "name": "Соба", "price": 250, "description": "Соба, овощи WOK, соус WOK", "image_url": "", "active": true, "sort_order": 400}, {"id": "p-4-1", "category": "Вок", "name": "Удон", "price": 200, "description": "Удон, овощи WOK, соус WOK", "image_url": "", "active": true, "sort_order": 401}, {"id": "p-4-2", "category": "Вок", "name": "С говядиной", "price": 300, "description": "Говядина, удон, овощи WOK, соус WOK", "image_url": "", "active": true, "sort_order": 402}, {"id": "p-4-3", "category": "Вок", "name": "С морепродуктами", "price": 300, "description": "Морепродукты, удон, овощи WOK, соус WOK", "image_url": "", "active": true, "sort_order": 403}, {"id": "p-4-4", "category": "Вок", "name": "С курицей", "price": 250, "description": "Курица, удон, овощи WOK, соус WOK", "image_url": "", "active": true, "sort_order": 404}, {"id": "p-4-5", "category": "Вок", "name": "Рис с курицей", "price": 250, "description": "Рис, курица, овощи WOK, соус WOK", "image_url": "", "active": true, "sort_order": 405}, {"id": "p-4-6", "category": "Вок", "name": "Рис с морепродуктами", "price": 300, "description": "Рис, морепродукты, овощи WOK, соус WOK", "image_url": "", "active": true, "sort_order": 406}, {"id": "p-5-0", "category": "Новинки", "name": "Хачапури аджарский", "price": 300, "description": "Соус, сыр, яйцо", "image_url": "", "active": true, "sort_order": 500}, {"id": "p-5-1", "category": "Новинки", "name": "Стромболи", "price": 200, "description": "Грибы, колбасы, помидоры, сыр, соус, зелень", "image_url": "", "active": true, "sort_order": 501}, {"id": "p-5-2", "category": "Новинки", "name": "Курица гриль", "price": 650, "description": "", "image_url": "", "active": true, "sort_order": 502}, {"id": "p-5-3", "category": "Новинки", "name": "Картошка фри", "price": 150, "description": "", "image_url": "", "active": true, "sort_order": 503}, {"id": "p-5-4", "category": "Новинки", "name": "Наггетсы", "price": 150, "description": "", "image_url": "", "active": true, "sort_order": 504}, {"id": "p-6-0", "category": "Напитки", "name": "Чай", "price": 150, "description": "", "image_url": "", "active": true, "sort_order": 600}, {"id": "p-6-1", "category": "Напитки", "name": "Чай травяной", "price": 150, "description": "", "image_url": "", "active": true, "sort_order": 601}, {"id": "p-6-2", "category": "Напитки", "name": "Кофе американо", "price": 100, "description": "", "image_url": "", "active": true, "sort_order": 602}, {"id": "p-6-3", "category": "Напитки", "name": "Капучино", "price": 150, "description": "", "image_url": "", "active": true, "sort_order": 603}, {"id": "p-6-4", "category": "Напитки", "name": "Кофе со сливками", "price": 30, "description": "", "image_url": "", "active": true, "sort_order": 604}, {"id": "p-6-5", "category": "Напитки", "name": "Кофе чёрный", "price": 50, "description": "", "image_url": "", "active": true, "sort_order": 605}, {"id": "p-6-6", "category": "Напитки", "name": "Кофе 3/1", "price": 50, "description": "", "image_url": "", "active": true, "sort_order": 606}];
 
-function loadEnvFile() {
-  const p = path.join(__dirname, '.env');
-  if (!fs.existsSync(p)) return;
-  const text = fs.readFileSync(p, 'utf8');
-  for (const raw of text.split(/\r?\n/)) {
-    const line = raw.trim();
-    if (!line || line.startsWith('#')) continue;
-    const i = line.indexOf('=');
-    if (i < 0) continue;
-    const k = line.slice(0, i).trim();
-    const v = line.slice(i + 1).trim();
-    if (!(k in process.env)) process.env[k] = v;
-  }
+function parseCookies(req){return Object.fromEntries((req.headers.cookie||'').split(';').map(x=>x.trim()).filter(Boolean).map(x=>{const i=x.indexOf('=');return [decodeURIComponent(x.slice(0,i)),decodeURIComponent(x.slice(i+1))]}))}
+function b64(v){return Buffer.from(JSON.stringify(v)).toString('base64url')}
+function sign(payload){const body=b64(payload),sig=createHmac('sha256',SESSION_SECRET).update(body).digest('base64url');return body+'.'+sig}
+function verifyToken(token){try{const [body,sig]=String(token||'').split('.'),good=createHmac('sha256',SESSION_SECRET).update(body).digest('base64url');if(!sig||Buffer.byteLength(sig)!==Buffer.byteLength(good)||!timingSafeEqual(Buffer.from(sig),Buffer.from(good)))return null;const p=JSON.parse(Buffer.from(body,'base64url').toString());return p.exp>=Date.now()?p:null}catch{return null}}
+function setSession(res,payload){const token=sign({...payload,exp:Date.now()+30*24*3600*1000});res.setHeader('Set-Cookie',`vkusa_session=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${30*24*3600}${process.env.NODE_ENV==='production'?'; Secure':''}`)}
+function clearSession(res){res.setHeader('Set-Cookie','vkusa_session=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0')}
+function session(req){return verifyToken(parseCookies(req).vkusa_session)}
+function requireUser(req,res,next){const s=session(req);if(!s||s.role!=='customer')return res.status(401).json({error:'Нужно войти по номеру телефона'});req.session=s;next()}
+function requireAdmin(req,res,next){const s=session(req);if(!s||s.role!=='admin')return res.status(401).json({error:'Нужен вход администратора'});req.session=s;next()}
+function normalizePhone(v){let s=String(v||'').replace(/[^\d+]/g,'');if(s.startsWith('8')&&s.replace(/\D/g,'').length===11)s='+7'+s.slice(1);if(!s.startsWith('+'))s='+'+s.replace(/\D/g,'');if(!/^\+[1-9]\d{7,14}$/.test(s))throw new Error('Введите номер в международном формате, например +79991234567');return s}
+async function q(t,p=[]){if(!pool)throw new Error('DATABASE_URL не настроен');return pool.query(t,p)}
+
+async function initDb(){if(!pool){memory.products=SEED_PRODUCTS.map(x=>({...x}));return}
+ await q(`CREATE TABLE IF NOT EXISTS users(id uuid PRIMARY KEY,phone text UNIQUE NOT NULL,name text NOT NULL DEFAULT '',address text NOT NULL DEFAULT '',created_at timestamptz NOT NULL DEFAULT now(),updated_at timestamptz NOT NULL DEFAULT now())`);
+ await q(`CREATE TABLE IF NOT EXISTS products(id text PRIMARY KEY,category text NOT NULL,name text NOT NULL,description text NOT NULL DEFAULT '',price integer NOT NULL CHECK(price>=0),image_url text NOT NULL DEFAULT '',active boolean NOT NULL DEFAULT true,sort_order integer NOT NULL DEFAULT 0,created_at timestamptz NOT NULL DEFAULT now(),updated_at timestamptz NOT NULL DEFAULT now())`);
+ await q(`CREATE TABLE IF NOT EXISTS orders(id uuid PRIMARY KEY,number bigserial UNIQUE,user_id uuid REFERENCES users(id),status text NOT NULL DEFAULT 'new',total integer NOT NULL DEFAULT 0,customer_name text NOT NULL,phone text NOT NULL,address text NOT NULL,comment text NOT NULL DEFAULT '',items jsonb NOT NULL DEFAULT '[]'::jsonb,created_at timestamptz NOT NULL DEFAULT now(),updated_at timestamptz NOT NULL DEFAULT now())`);
+ const c=await q('SELECT count(*)::int c FROM products');if(c.rows[0].c===0)for(const p of SEED_PRODUCTS)await q('INSERT INTO products(id,category,name,description,price,image_url,active,sort_order) VALUES($1,$2,$3,$4,$5,$6,$7,$8)',[p.id,p.category,p.name,p.description,p.price,p.image_url,p.active,p.sort_order])
 }
-loadEnvFile();
+async function getUser(id){if(!pool)return memory.users.find(x=>x.id===id)||null;return (await q('SELECT * FROM users WHERE id=$1',[id])).rows[0]||null}
+async function ensureUser(phone){if(!pool){let u=memory.users.find(x=>x.phone===phone);if(!u){u={id:randomUUID(),phone,name:'',address:'',created_at:new Date().toISOString()};memory.users.push(u)}return u}return (await q(`INSERT INTO users(id,phone) VALUES($1,$2) ON CONFLICT(phone) DO UPDATE SET updated_at=now() RETURNING *`,[randomUUID(),phone])).rows[0]}
+const otpThrottle=new Map();function throttle(phone){const now=Date.now(),x=otpThrottle.get(phone)||{last:0,hour:[]};x.hour=x.hour.filter(t=>now-t<3600000);if(now-x.last<45000)throw new Error('Подождите 45 секунд перед повторной отправкой');if(x.hour.length>=5)throw new Error('Слишком много запросов. Попробуйте позже.');x.last=now;x.hour.push(now);otpThrottle.set(phone,x)}
+async function twilioStart(phone){if(DEV_AUTH_CODE)return;if(!TWILIO_ACCOUNT_SID||!TWILIO_AUTH_TOKEN||!TWILIO_VERIFY_SERVICE_SID)throw new Error('SMS-провайдер ещё не настроен администратором');const url=`https://verify.twilio.com/v2/Services/${encodeURIComponent(TWILIO_VERIFY_SERVICE_SID)}/Verifications`;const r=await fetch(url,{method:'POST',headers:{Authorization:'Basic '+Buffer.from(TWILIO_ACCOUNT_SID+':'+TWILIO_AUTH_TOKEN).toString('base64'),'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({To:phone,Channel:'sms'})});const j=await r.json();if(!r.ok)throw new Error(j.message||'Не удалось отправить SMS')}
+async function twilioCheck(phone,code){if(DEV_AUTH_CODE)return String(code)===String(DEV_AUTH_CODE);const url=`https://verify.twilio.com/v2/Services/${encodeURIComponent(TWILIO_VERIFY_SERVICE_SID)}/VerificationCheck`;const r=await fetch(url,{method:'POST',headers:{Authorization:'Basic '+Buffer.from(TWILIO_ACCOUNT_SID+':'+TWILIO_AUTH_TOKEN).toString('base64'),'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({To:phone,Code:String(code)})});const j=await r.json();return r.ok&&j.status==='approved'}
+async function telegram(text){if(!TG_TOKEN||!TG_CHAT_ID)return;try{await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat_id:TG_CHAT_ID,text})})}catch(e){console.error('Telegram:',e.message)}}
 
-const PORT = Number(process.env.PORT || 3000);
-const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
-const DEMO_MODE = String(process.env.DEMO_MODE || 'true').toLowerCase() === 'true';
-const SHOP_ID = process.env.YOOKASSA_SHOP_ID || '';
-const SECRET = process.env.YOOKASSA_SECRET_KEY || '';
-const TG_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '';
-const TG_CHAT_ID = process.env.TELEGRAM_CHAT_ID || '';
-
-const MENU = [
-  {category:'Пицца',items:[
-    ['Маргарита',400,'Тесто, соус из свежих томатов, сыр моцарелла, помидор, базилик'],
-    ['Пепперони',450,'Тесто, томатный соус, моцарелла, перец, маслины, пепперони, орегано'],
-    ['4 сыра',450,'Сливочный соус, моцарелла, гауда, дор блю, пармезан'],
-    ['Курица с грибами',450,'Сливочный соус, куриное филе, шампиньоны, зелень'],
-    ['Охотничья',450,'Сливочный и томатный соус, куриное филе, охотничьи колбаски, лук, зелень'],
-    ['BBQ с барбекю',450,'Соус BBQ, томатный соус, грибы, лук, говядина'],
-    ['Мясная',450,'Томатный соус, колбаски, курица, говядина, лук, помидоры'],
-    ['Груша горгонзола',350,'Сливочный соус, груша, горгонзола, орехи, карамель'],
-    ['Деревенская',450,'Моцарелла, сливочный соус, ветчина, сервелат, грибы, помидоры, курица'],
-    ['С морепродуктами',450,'Лосось, краб, мидии, сливочный соус, пармезан'],
-    ['Гавайская',400,'Моцарелла, томатный соус, ананас, ветчина, куриное филе'],
-    ['Perfecto острая',450,'Моцарелла, соусы, грибы, говядина, перец, колбаски, курица, спайси'],
-    ['С ветчиной и грибами',400,'Моцарелла, томатный соус, ветчина, грибы'],
-    ['Ассорти',450,'Сливочный и томатный соус, моцарелла, грибы, лук, курица, колбаски'],
-    ['Поло',450,'Томатный и сливочный соус, моцарелла, перец, лук, куриное филе'],
-    ['Мексика',450,'Томатный соус, чили, моцарелла, перец, колбаски, халапеньо, кукуруза, курица'],
-    ['Куриная',400,'Сливочный соус, куриное филе, помидоры, зелень'],
-    ['Цезарь',400,'Сливочный соус, куриное филе, помидоры, листья салата, соус Цезарь']
-  ]},
-  {category:'Холодные роллы',items:[
-    ['Филадельфия',350,'Сыр, огурец, сливочный сыр, лосось'],
-    ['Филадельфия карамель',300,'Сыр, огурец, сливочный сыр, лосось, тростниковый сахар'],
-    ['Филадельфия с угрем',350,'Сыр, нори, огурец, угорь, унаги, кунжут'],
-    ['Калифорния',300,'Сыр, краб, огурец, тобико, нори'],
-    ['Калифорния с угрем',350,'Сыр, угорь, огурец, нори, тобико'],
-    ['Калифорния с лососем',350,'Сыр, огурец, лосось, тобико, нори']
-  ]},
-  {category:'Запечённые роллы',items:[
-    ['Запечённый лосось',350,'Нори, рис, лосось, соус хот, унаги, кунжут'],
-    ['Запечённый угорь',350,'Нори, рис, сыр, угорь, соус хот'],
-    ['Запечённый краб',300,'Нори, рис, краб, сыр, соус хот'],
-    ['Запечённые мидии',300,'Нори, рис, мидии, сыр, соус хот, моцарелла'],
-    ['Запечённый Хот лосось',350,'Нори, рис, сыр, огурец, лосось, краб, соус хот'],
-    ['Запечённый Хот угорь',350,'Нори, рис, сыр, огурец, угорь, краб, соус хот'],
-    ['Запечённый Хот мидии',350,'Нори, рис, сыр, огурец, мидии, краб, соус хот'],
-    ['Запечённая креветка',350,'Нори, рис, сыр, огурец, креветка, унаги, кунжут'],
-    ['Запечённая Филадельфия',400,'Сыр, огурец, нори, лосось, яки соус, унаги'],
-    ['Запечённая курица',300,'Нори, рис, сыр, огурец, курица, соус']
-  ]},
-  {category:'Темпура',items:[
-    ['Темпура хакайна',350,'Нори, рис, лосось, краб, соус хот, унаги, кунжут, кляр'],
-    ['Темпура угорь',350,'Нори, рис, сыр, угорь, соус хот, кляр'],
-    ['Темпура краб',300,'Нори, рис, краб, сыр, соус хот, кляр'],
-    ['Темпура мидии',300,'Нори, рис, мидии, сыр, соус хот, моцарелла, кляр'],
-    ['Темпура креветка',350,'Нори, рис, сыр, огурец, креветка, унаги, кунжут, кляр'],
-    ['Темпура Филадельфия',350,'Сыр, огурец, нори, сливочный сыр, лосось, яки, унаги, кляр'],
-    ['Темпура курица',300,'Нори, рис, сыр, огурец, курица, соус, кляр']
-  ]},
-  {category:'Вок',items:[
-    ['Соба',250,'Соба, овощи WOK, соус WOK'],['Удон',200,'Удон, овощи WOK, соус WOK'],
-    ['С говядиной',300,'Говядина, удон, овощи WOK, соус WOK'],['С морепродуктами',300,'Морепродукты, удон, овощи WOK, соус WOK'],
-    ['С курицей',250,'Курица, удон, овощи WOK, соус WOK'],['Рис с курицей',250,'Рис, курица, овощи WOK, соус WOK'],
-    ['Рис с морепродуктами',300,'Рис, морепродукты, овощи WOK, соус WOK']
-  ]},
-  {category:'Новинки',items:[
-    ['Хачапури аджарский',300,'Соус, сыр, яйцо'],['Стромболи',200,'Грибы, колбасы, помидоры, сыр, соус, зелень'],['Курица гриль',650,''],['Картошка фри',150,''],['Наггетсы',150,'']
-  ]},
-  {category:'Напитки',items:[
-    ['Чай',150,''],['Чай травяной',150,''],['Кофе американо',100,''],['Капучино',150,''],['Кофе со сливками',30,''],['Кофе чёрный',50,''],['Кофе 3/1',50,'']
-  ]}
-];
-
-const catalog = new Map();
-MENU.forEach((section, ci) => section.items.forEach((x, ii) => catalog.set(`${ci}-${ii}`, {id:`${ci}-${ii}`, name:x[0], price:x[1]})));
-
-async function loadOrders() {
-  try { return JSON.parse(await fsp.readFile(DATA_FILE, 'utf8')); }
-  catch { return []; }
-}
-async function saveOrders(orders) { await fsp.writeFile(DATA_FILE, JSON.stringify(orders, null, 2), 'utf8'); }
-
-function sendJson(res, status, data) {
-  const body = JSON.stringify(data);
-  res.writeHead(status, {'content-type':'application/json; charset=utf-8','content-length':Buffer.byteLength(body)});
-  res.end(body);
-}
-function sendText(res, status, text) {
-  res.writeHead(status, {'content-type':'text/plain; charset=utf-8'}); res.end(text);
-}
-async function readJson(req) {
-  return new Promise((resolve, reject) => {
-    let body = '';
-    req.on('data', c => { body += c; if (body.length > 1_000_000) req.destroy(); });
-    req.on('end', () => { try { resolve(body ? JSON.parse(body) : {}); } catch (e) { reject(e); } });
-    req.on('error', reject);
-  });
-}
-function basicAuth() { return 'Basic ' + Buffer.from(`${SHOP_ID}:${SECRET}`).toString('base64'); }
-
-async function createYooPayment(order) {
-  const idempotence = crypto.randomUUID();
-  const response = await fetch('https://api.yookassa.ru/v3/payments', {
-    method:'POST',
-    headers:{'Authorization':basicAuth(),'Idempotence-Key':idempotence,'Content-Type':'application/json'},
-    body:JSON.stringify({
-      amount:{value:order.total.toFixed(2),currency:'RUB'},
-      capture:true,
-      confirmation:{type:'redirect',return_url:`${BASE_URL}/?payment_return=1&order_id=${encodeURIComponent(order.id)}`},
-      description:`Заказ ${order.id}`,
-      metadata:{order_id:order.id}
-    })
-  });
-  if (!response.ok) throw new Error(`YooKassa ${response.status}: ${await response.text()}`);
-  return response.json();
-}
-
-async function fetchYooPayment(paymentId) {
-  const response = await fetch(`https://api.yookassa.ru/v3/payments/${encodeURIComponent(paymentId)}`, {
-    headers:{'Authorization':basicAuth()}
-  });
-  if (!response.ok) throw new Error(`YooKassa verify ${response.status}: ${await response.text()}`);
-  return response.json();
-}
-
-function formatAdminMessage(order) {
-  const lines = order.items.map(x => `• ${x.name} × ${x.qty} — ${x.price*x.qty} ₽${x.note ? `\n  ↳ ${x.note}` : ''}`).join('\n');
-  return `🍕 НОВЫЙ ОПЛАЧЕННЫЙ ЗАКАЗ\n${order.id}\n\n${lines}\n\nИТОГО: ${order.total} ₽\n\n👤 ${order.customer.name}\n📞 ${order.customer.phone}\n📍 ${order.customer.address}\n💬 ${order.customer.comment || '—'}`;
-}
-async function notifyTelegram(order) {
-  if (!TG_TOKEN || !TG_CHAT_ID) { console.log('[Telegram not configured]\n' + formatAdminMessage(order)); return; }
-  const response = await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`, {
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({chat_id:TG_CHAT_ID,text:formatAdminMessage(order)})
-  });
-  if (!response.ok) throw new Error(`Telegram ${response.status}: ${await response.text()}`);
-}
-
-async function createOrder(payload) {
-  if (!payload || !Array.isArray(payload.items) || payload.items.length === 0) throw new Error('Корзина пустая');
-  const name = String(payload.customer?.name || '').trim();
-  const phone = String(payload.customer?.phone || '').trim();
-  const address = String(payload.customer?.address || '').trim();
-  if (!name || !phone || !address) throw new Error('Заполни имя, телефон и адрес');
-
-  const items = payload.items.map(x => {
-    const product = catalog.get(String(x.id));
-    if (!product) throw new Error('Неизвестный товар');
-    const qty = Math.max(1, Math.min(20, Number(x.qty) || 1));
-    return {id:product.id,name:product.name,price:product.price,qty,note:String(x.note||'').slice(0,300)};
-  });
-  const total = items.reduce((s,x)=>s+x.price*x.qty,0);
-  return {
-    id:'VK-' + Date.now().toString(36).toUpperCase() + '-' + crypto.randomBytes(2).toString('hex').toUpperCase(),
-    createdAt:new Date().toISOString(), status:'created', total, items,
-    customer:{name,phone,address,comment:String(payload.customer?.comment||'').slice(0,500)},
-    paymentId:null, notified:false
-  };
-}
-
-function mime(file) {
-  if (file.endsWith('.html')) return 'text/html; charset=utf-8';
-  if (file.endsWith('.css')) return 'text/css; charset=utf-8';
-  if (file.endsWith('.js')) return 'text/javascript; charset=utf-8';
-  if (file.endsWith('.json')) return 'application/json; charset=utf-8';
-  return 'application/octet-stream';
-}
-async function serveStatic(req,res,urlPath) {
-  let rel = urlPath === '/' ? 'index.html' : urlPath.replace(/^\/+/, '');
-  const full = path.normalize(path.join(PUBLIC, rel));
-  if (!full.startsWith(PUBLIC)) return sendText(res,403,'Forbidden');
-  try {
-    const stat = await fsp.stat(full);
-    if (!stat.isFile()) throw new Error('not file');
-    const buf = await fsp.readFile(full);
-    res.writeHead(200, {'content-type':mime(full),'cache-control':'no-store'}); res.end(buf);
-  } catch { sendText(res,404,'Not found'); }
-}
-
-const server = http.createServer(async (req,res) => {
-  try {
-    const url = new URL(req.url, BASE_URL);
-    if (req.method === 'GET' && url.pathname === '/api/config') return sendJson(res,200,{demoMode:DEMO_MODE});
-    if (req.method === 'POST' && url.pathname === '/api/create-order') {
-      const payload = await readJson(req);
-      const order = await createOrder(payload);
-      const orders = await loadOrders();
-      orders.push(order); await saveOrders(orders);
-
-      if (DEMO_MODE) {
-        order.status='paid';
-        order.paymentId='DEMO-' + crypto.randomUUID();
-        if (!order.notified) { await notifyTelegram(order); order.notified=true; }
-        const all = await loadOrders(); const i = all.findIndex(x=>x.id===order.id); if(i>=0) all[i]=order; await saveOrders(all);
-        return sendJson(res,200,{ok:true,demo:true,orderId:order.id,status:'paid',redirectUrl:`/?payment_return=1&order_id=${encodeURIComponent(order.id)}`});
-      }
-      if (!SHOP_ID || !SECRET) return sendJson(res,500,{error:'YooKassa keys are not configured'});
-      const payment = await createYooPayment(order);
-      order.paymentId=payment.id; order.status=payment.status;
-      const all = await loadOrders(); const i=all.findIndex(x=>x.id===order.id); if(i>=0) all[i]=order; await saveOrders(all);
-      return sendJson(res,200,{ok:true,demo:false,orderId:order.id,status:order.status,redirectUrl:payment.confirmation?.confirmation_url});
-    }
-    if (req.method === 'POST' && url.pathname === '/api/yookassa-webhook') {
-      const event = await readJson(req);
-      if (event?.event !== 'payment.succeeded' || !event?.object?.id) return sendJson(res,200,{ok:true,ignored:true});
-      if (!SHOP_ID || !SECRET) return sendJson(res,500,{error:'Keys missing'});
-      const verified = await fetchYooPayment(event.object.id);
-      if (verified.status !== 'succeeded') return sendJson(res,200,{ok:true,ignored:true});
-      const orderId = String(verified.metadata?.order_id || '');
-      const orders = await loadOrders(); const i = orders.findIndex(x=>x.id===orderId);
-      if (i < 0) return sendJson(res,404,{error:'Order not found'});
-      const order = orders[i];
-      if (Number(verified.amount?.value) !== Number(order.total)) return sendJson(res,400,{error:'Amount mismatch'});
-      order.status='paid'; order.paymentId=verified.id;
-      if (!order.notified) { await notifyTelegram(order); order.notified=true; }
-      orders[i]=order; await saveOrders(orders);
-      return sendJson(res,200,{ok:true});
-    }
-    if (req.method === 'GET' && url.pathname.startsWith('/api/order/')) {
-      const id = decodeURIComponent(url.pathname.slice('/api/order/'.length));
-      const orders = await loadOrders(); const order=orders.find(x=>x.id===id);
-      if(!order) return sendJson(res,404,{error:'Not found'});
-      return sendJson(res,200,{id:order.id,status:order.status,total:order.total,items:order.items,customer:order.customer,createdAt:order.createdAt});
-    }
-    return serveStatic(req,res,url.pathname);
-  } catch (e) {
-    console.error(e);
-    return sendJson(res,500,{error:e.message || 'Server error'});
-  }
-});
-server.listen(PORT,()=>console.log(`Vkusa shop: ${BASE_URL} demo=${DEMO_MODE}`));
+app.get('/api/config',(req,res)=>res.json({demoMode:DEMO_PAYMENT,smsConfigured:!!(DEV_AUTH_CODE||(TWILIO_ACCOUNT_SID&&TWILIO_AUTH_TOKEN&&TWILIO_VERIFY_SERVICE_SID))}));
+app.post('/api/auth/send-code',async(req,res)=>{try{const phone=normalizePhone(req.body.phone);throttle(phone);await twilioStart(phone);res.json({ok:true,message:DEV_AUTH_CODE?'Тестовый режим: используйте код из DEV_AUTH_CODE.':'Код отправлен по SMS.'})}catch(e){res.status(400).json({error:e.message})}});
+app.post('/api/auth/verify-code',async(req,res)=>{try{const phone=normalizePhone(req.body.phone);if(!(await twilioCheck(phone,req.body.code)))return res.status(400).json({error:'Неверный или просроченный код'});const user=await ensureUser(phone);setSession(res,{role:'customer',userId:user.id});res.json({user})}catch(e){res.status(400).json({error:e.message})}});
+app.post('/api/auth/logout',(req,res)=>{clearSession(res);res.json({ok:true})});
+app.get('/api/me',requireUser,async(req,res)=>res.json({user:await getUser(req.session.userId)}));
+app.put('/api/me',requireUser,async(req,res)=>{try{const name=String(req.body.name||'').trim().slice(0,100),address=String(req.body.address||'').trim().slice(0,300);let user;if(!pool){user=await getUser(req.session.userId);user.name=name;user.address=address}else user=(await q('UPDATE users SET name=$1,address=$2,updated_at=now() WHERE id=$3 RETURNING *',[name,address,req.session.userId])).rows[0];res.json({user})}catch(e){res.status(400).json({error:e.message})}});
+app.get('/api/menu',async(req,res)=>{try{const ps=pool?(await q('SELECT * FROM products WHERE active=true ORDER BY sort_order,name')).rows:memory.products.filter(x=>x.active).sort((a,b)=>a.sort_order-b.sort_order),groups=[];for(const p of ps){let g=groups.find(x=>x.category===p.category);if(!g){g={category:p.category,items:[]};groups.push(g)}g.items.push(p)}res.json({menu:groups})}catch(e){res.status(500).json({error:e.message})}});
+app.get('/api/my-orders',requireUser,async(req,res)=>{try{const rows=pool?(await q('SELECT * FROM orders WHERE user_id=$1 ORDER BY created_at DESC LIMIT 100',[req.session.userId])).rows:memory.orders.filter(x=>x.user_id===req.session.userId).sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));res.json({orders:rows})}catch(e){res.status(500).json({error:e.message})}});
+app.get('/api/order/:id',requireUser,async(req,res)=>{try{const o=pool?(await q('SELECT * FROM orders WHERE id=$1 AND user_id=$2',[req.params.id,req.session.userId])).rows[0]:memory.orders.find(x=>x.id===req.params.id&&x.user_id===req.session.userId);if(!o)return res.status(404).json({error:'Заказ не найден'});res.json(o)}catch(e){res.status(500).json({error:e.message})}});
+app.post('/api/create-order',requireUser,async(req,res)=>{try{const user=await getUser(req.session.userId),raw=Array.isArray(req.body.items)?req.body.items:[];if(!raw.length)throw new Error('Корзина пустая');const ids=[...new Set(raw.map(x=>String(x.id)))],products=pool?(await q('SELECT * FROM products WHERE id=ANY($1::text[]) AND active=true',[ids])).rows:memory.products.filter(x=>ids.includes(x.id)&&x.active),map=new Map(products.map(p=>[p.id,p])),items=[];let total=0;for(const r of raw){const p=map.get(String(r.id));if(!p)throw new Error('Одно из блюд больше недоступно');const qty=Math.max(1,Math.min(20,Number(r.qty)||1)),x={id:p.id,name:p.name,price:Number(p.price),qty,note:String(r.note||'').slice(0,250)};items.push(x);total+=x.price*x.qty}const id=randomUUID(),customer_name=String(req.body.customer?.name||user.name||'').trim().slice(0,100),address=String(req.body.customer?.address||user.address||'').trim().slice(0,300),comment=String(req.body.customer?.comment||'').trim().slice(0,500);if(!customer_name||!address)throw new Error('Заполните имя и адрес');let order;if(!pool){order={id,number:memory.orders.length+1,user_id:user.id,status:'new',total,customer_name,phone:user.phone,address,comment,items,created_at:new Date().toISOString()};memory.orders.push(order)}else order=(await q('INSERT INTO orders(id,user_id,status,total,customer_name,phone,address,comment,items) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb) RETURNING *',[id,user.id,'new',total,customer_name,user.phone,address,comment,JSON.stringify(items)])).rows[0];await telegram(`🍽 Новый заказ #${order.number||String(id).slice(0,6)}\n${customer_name} · ${user.phone}\n📍 ${address}\n\n${items.map(x=>`${x.name} × ${x.qty} — ${x.price*x.qty} ₽${x.note?'\n↳ '+x.note:''}`).join('\n')}\n\nИтого: ${total} ₽`);res.json({orderId:id,redirectUrl:`/?payment_return=1&order_id=${encodeURIComponent(id)}`})}catch(e){res.status(400).json({error:e.message})}});
+app.post('/api/admin/login',(req,res)=>{if(String(req.body.username||'')!==ADMIN_USER||String(req.body.password||'')!==ADMIN_PASSWORD)return res.status(401).json({error:'Неверный логин или пароль'});setSession(res,{role:'admin'});res.json({ok:true})});
+app.post('/api/admin/logout',(req,res)=>{clearSession(res);res.json({ok:true})});
+app.get('/api/admin/me',requireAdmin,(req,res)=>res.json({ok:true}));
+app.get('/api/admin/orders',requireAdmin,async(req,res)=>{try{res.json({orders:pool?(await q('SELECT * FROM orders ORDER BY created_at DESC LIMIT 300')).rows:memory.orders.slice().reverse()})}catch(e){res.status(500).json({error:e.message})}});
+app.put('/api/admin/orders/:id/status',requireAdmin,async(req,res)=>{const allowed=['new','cooking','courier','delivered','cancelled'],status=String(req.body.status||'');if(!allowed.includes(status))return res.status(400).json({error:'Неверный статус'});try{let o;if(!pool){o=memory.orders.find(x=>x.id===req.params.id);if(o)o.status=status}else o=(await q('UPDATE orders SET status=$1,updated_at=now() WHERE id=$2 RETURNING *',[status,req.params.id])).rows[0];if(!o)return res.status(404).json({error:'Заказ не найден'});res.json({order:o})}catch(e){res.status(500).json({error:e.message})}});
+app.get('/api/admin/products',requireAdmin,async(req,res)=>{try{res.json({products:pool?(await q('SELECT * FROM products ORDER BY sort_order,name')).rows:memory.products.slice().sort((a,b)=>a.sort_order-b.sort_order)})}catch(e){res.status(500).json({error:e.message})}});
+app.post('/api/admin/products',requireAdmin,async(req,res)=>{try{const p=req.body,id='p-'+randomUUID().slice(0,8),vals=[id,String(p.category||'').trim(),String(p.name||'').trim(),String(p.description||'').trim(),Math.max(0,Number(p.price)||0),String(p.image_url||'').trim(),p.active!==false,Number(p.sort_order)||0];if(!vals[1]||!vals[2])throw new Error('Нужны название и категория');let product;if(!pool){product={id,category:vals[1],name:vals[2],description:vals[3],price:vals[4],image_url:vals[5],active:vals[6],sort_order:vals[7]};memory.products.push(product)}else product=(await q('INSERT INTO products(id,category,name,description,price,image_url,active,sort_order) VALUES($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *',vals)).rows[0];res.json({product})}catch(e){res.status(400).json({error:e.message})}});
+app.put('/api/admin/products/:id',requireAdmin,async(req,res)=>{try{const p=req.body,vals=[String(p.category||'').trim(),String(p.name||'').trim(),String(p.description||'').trim(),Math.max(0,Number(p.price)||0),String(p.image_url||'').trim(),p.active!==false,Number(p.sort_order)||0,req.params.id];let product;if(!pool){product=memory.products.find(x=>x.id===req.params.id);if(product)Object.assign(product,{category:vals[0],name:vals[1],description:vals[2],price:vals[3],image_url:vals[4],active:vals[5],sort_order:vals[6]})}else product=(await q('UPDATE products SET category=$1,name=$2,description=$3,price=$4,image_url=$5,active=$6,sort_order=$7,updated_at=now() WHERE id=$8 RETURNING *',vals)).rows[0];if(!product)return res.status(404).json({error:'Блюдо не найдено'});res.json({product})}catch(e){res.status(400).json({error:e.message})}});
+app.use(express.static(path.join(__dirname,'public')));
+app.get('/admin',(req,res)=>res.sendFile(path.join(__dirname,'public','admin.html')));
+app.get('/*splat',(req,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
+initDb().then(()=>app.listen(PORT,()=>console.log('VKUSA server on '+PORT))).catch(e=>{console.error(e);process.exit(1)});
