@@ -40,6 +40,8 @@ const MENU = [
 ];
 
 let cart = JSON.parse(localStorage.getItem('vkusa_cart') || '{}');
+let profile = JSON.parse(localStorage.getItem('vkusa_profile') || '{}');
+let orderHistory = JSON.parse(localStorage.getItem('vkusa_order_history') || '[]');
 let demoMode = true;
 const $ = (id) => document.getElementById(id);
 const money = (n) => new Intl.NumberFormat('ru-RU').format(n) + ' ₽';
@@ -166,14 +168,37 @@ function updateBadge(){
   $('badge').textContent = count; $('badge').hidden = count === 0; $('topCount').textContent = count;
 }
 function showView(name){
-  ['menuView','cartView','successView'].forEach(id => $(id).classList.remove('active'));
+  ['menuView','cartView','profileView','successView'].forEach(id => $(id).classList.remove('active'));
   $(name+'View').classList.add('active');
-  $('menuTab').classList.toggle('active', name==='menu'); $('cartTab').classList.toggle('active', name==='cart');
+  $('menuTab').classList.toggle('active', name==='menu');
+  $('profileTab').classList.toggle('active', name==='profile');
+  $('cartTab').classList.toggle('active', name==='cart');
   document.querySelector('.bottom-nav').style.display = name==='success' ? 'none' : 'grid';
-  if(name==='cart') renderCart(); window.scrollTo(0,0);
+  if(name==='cart') renderCart();
+  if(name==='profile') renderProfile();
+  window.scrollTo(0,0);
 }
 
 function iconFor(cat){ if(cat==='Пицца') return '🍕'; if(cat.includes('роллы') || cat==='Темпура') return '🍣'; if(cat==='Вок') return '🍜'; if(cat==='Напитки') return '☕'; return '🍽️'; }
+
+function renderHits(){
+  const picks = [
+    {ci:0,ii:1,tag:'ХИТ'},
+    {ci:1,ii:0,tag:'ТОП'},
+    {ci:2,ii:0,tag:'ГОРЯЧЕЕ'},
+    {ci:4,ii:4,tag:'WOK'}
+  ];
+  const root=$('hitsGrid'); if(!root) return; root.innerHTML='';
+  picks.forEach(p=>{
+    const item=MENU[p.ci]?.items[p.ii]; if(!item) return;
+    const id=`${p.ci}-${p.ii}`;
+    const card=document.createElement('article'); card.className='hit-card';
+    card.innerHTML=`<div class="hit-art"><img src="${dishArt(MENU[p.ci].category,item[0],item[2]||'',item[1])}" alt="${esc(item[0])}"><span>${p.tag}</span></div><div class="hit-copy"><div><h3>${esc(item[0])}</h3><p>${esc(item[2]||MENU[p.ci].category)}</p></div><div class="hit-foot"><strong>${money(item[1])}</strong><button type="button">+</button></div></div>`;
+    card.querySelector('button').onclick=()=>{if(!cart[id]) cart[id]={id,name:item[0],price:item[1],qty:0,note:''};cart[id].qty++;saveCart();};
+    root.appendChild(card);
+  });
+}
+
 function renderMenu(){
   $('categoryStrip').innerHTML=''; $('menuRoot').innerHTML='';
   MENU.forEach((section,ci)=>{
@@ -206,8 +231,72 @@ function renderCart(){
 async function loadConfig(){
   try{const r=await fetch('/api/config');const j=await r.json();demoMode=!!j.demoMode;$('paymentInfo').textContent=demoMode?'Демо-режим: деньги не списываются, но весь путь заказа работает.':'Боевой режим ЮKassa: после оплаты подтверждённый заказ уйдёт администратору.';}catch{$('paymentInfo').textContent='Не удалось получить настройки сервера.';}
 }
+
+function saveProfile(){
+  profile={
+    name:$('profileName').value.trim(),
+    phone:$('profilePhone').value.trim(),
+    address:$('profileAddress').value.trim()
+  };
+  localStorage.setItem('vkusa_profile',JSON.stringify(profile));
+  applyProfileToCheckout();
+  $('profileSaved').hidden=false;
+  setTimeout(()=>{$('profileSaved').hidden=true},1800);
+  renderProfileHeader();
+}
+function applyProfileToCheckout(){
+  if(profile.name && !$('name').value) $('name').value=profile.name;
+  if(profile.phone && !$('phone').value) $('phone').value=profile.phone;
+  if(profile.address && !$('address').value) $('address').value=profile.address;
+}
+function renderProfileHeader(){
+  const name=profile.name||'Ваш профиль';
+  $('profileGreeting').textContent=profile.name?`Здравствуйте, ${profile.name}`:'Ваш профиль';
+}
+function renderProfile(){
+  $('profileName').value=profile.name||'';
+  $('profilePhone').value=profile.phone||'';
+  $('profileAddress').value=profile.address||'';
+  renderProfileHeader();
+  renderHistory();
+}
+function renderHistory(){
+  $('historyCount').textContent=orderHistory.length;
+  $('historyEmpty').hidden=orderHistory.length>0;
+  $('orderHistory').innerHTML='';
+  orderHistory.forEach((o,idx)=>{
+    const card=document.createElement('article');card.className='history-item';
+    const when=new Date(o.date);
+    const dateText=isNaN(when)?o.date:when.toLocaleString('ru-RU',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+    card.innerHTML=`<div class="history-top"><div><span class="history-status">✓ Выполнен</span><h3>Заказ ${esc(o.orderId||'#'+(orderHistory.length-idx))}</h3><p>${dateText}</p></div><strong>${money(o.total||0)}</strong></div><div class="history-items">${(o.items||[]).map(x=>`<span>${esc(x.name)} × ${x.qty}</span>`).join('')}</div><button class="repeat-btn" type="button">Повторить заказ</button>`;
+    card.querySelector('.repeat-btn').onclick=()=>{
+      (o.items||[]).forEach(x=>{
+        const id=x.id;
+        if(!id)return;
+        if(!cart[id])cart[id]={id,name:x.name,price:x.price,qty:0,note:x.note||''};
+        cart[id].qty+=x.qty;
+      });
+      saveCart();showView('cart');
+    };
+    $('orderHistory').appendChild(card);
+  });
+}
+function rememberOrder(o){
+  if(!o || !o.id) return;
+  if(orderHistory.some(x=>String(x.orderId)===String(o.id))) return;
+  orderHistory.unshift({
+    orderId:o.id,
+    date:new Date().toISOString(),
+    total:o.total,
+    items:(o.items||[]).map(x=>({id:x.id,name:x.name,price:x.price,qty:x.qty,note:x.note||''}))
+  });
+  orderHistory=orderHistory.slice(0,30);
+  localStorage.setItem('vkusa_order_history',JSON.stringify(orderHistory));
+}
+
 async function checkout(){
-  const name=$('name').value.trim(), phone=$('phone').value.trim(), address=$('address').value.trim(); if(!name||!phone||!address){alert('Заполни имя, телефон и адрес.');return;}
+  const name=$('name').value.trim(), phone=$('phone').value.trim(), address=$('address').value.trim();
+  if(name||phone||address){profile={name,phone,address};localStorage.setItem('vkusa_profile',JSON.stringify(profile));} if(!name||!phone||!address){alert('Заполни имя, телефон и адрес.');return;}
   const items=Object.values(cart).map(x=>({id:x.id,qty:x.qty,note:x.note})); if(!items.length){alert('Корзина пустая.');return;}
   $('checkoutBtn').disabled=true; $('checkoutBtn').textContent='Создаём заказ…';
   try{
@@ -222,11 +311,30 @@ async function loadSuccess(orderId){
     const r=await fetch('/api/order/'+encodeURIComponent(orderId)); const o=await r.json(); if(!r.ok) throw new Error(o.error||'Заказ не найден');
     $('successTitle').textContent=o.status==='paid'?'Оплата подтверждена':'Заказ создан'; $('successSub').textContent=o.status==='paid'?'Заказ готов к передаче администратору.':'Платёж ещё обрабатывается.';
     $('receipt').innerHTML=`<div class="receipt-box">${o.items.map(x=>`<div class="receipt-line"><div><strong>${esc(x.name)} × ${x.qty}</strong>${x.note?`<div class="receipt-note">↳ ${esc(x.note)}</div>`:''}</div><b>${money(x.price*x.qty)}</b></div>`).join('')}<div class="receipt-total"><span>Итого</span><span>${money(o.total)}</span></div></div>`;
-    if(o.status==='paid'){cart={};saveCart();}
+    if(o.status==='paid'){rememberOrder(o);cart={};saveCart();}
   }catch(e){$('successTitle').textContent='Не удалось проверить заказ';$('successSub').textContent=e.message;}
 }
 
-$('menuTab').onclick=()=>showView('menu'); $('cartTab').onclick=()=>showView('cart'); $('topCartBtn').onclick=()=>showView('cart'); $('goMenuBtn').onclick=()=>showView('menu'); $('backMenuBtn').onclick=()=>showView('menu');
-$('clearBtn').onclick=()=>{if(Object.keys(cart).length&&confirm('Очистить корзину?')){cart={};saveCart();renderCart();}}; $('checkoutBtn').onclick=checkout;
-renderMenu(); updateBadge(); loadConfig();
-const qs=new URLSearchParams(location.search); if(qs.get('payment_return')==='1'&&qs.get('order_id')) loadSuccess(qs.get('order_id'));
+$('menuTab').onclick=()=>showView('menu');
+$('profileTab').onclick=()=>showView('profile');
+$('cartTab').onclick=()=>showView('cart');
+$('topCartBtn').onclick=()=>showView('cart');
+$('topProfileBtn').onclick=()=>showView('profile');
+$('brandBtn').onclick=()=>showView('menu');
+$('heroMenuBtn').onclick=()=>document.querySelector('.menu-heading').scrollIntoView({behavior:'smooth'});
+$('heroProfileBtn').onclick=()=>showView('profile');
+$('goMenuBtn').onclick=()=>showView('menu');
+$('backMenuBtn').onclick=()=>showView('menu');
+$('saveProfileBtn').onclick=saveProfile;
+$('clearBtn').onclick=()=>{if(Object.keys(cart).length&&confirm('Очистить корзину?')){cart={};saveCart();renderCart();}};
+$('checkoutBtn').onclick=checkout;
+
+renderMenu();
+renderHits();
+updateBadge();
+loadConfig();
+applyProfileToCheckout();
+renderProfileHeader();
+
+const qs=new URLSearchParams(location.search);
+if(qs.get('payment_return')==='1'&&qs.get('order_id')) loadSuccess(qs.get('order_id'));
