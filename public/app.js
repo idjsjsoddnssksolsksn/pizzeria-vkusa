@@ -1,52 +1,12 @@
-const MENU = [
-  {category:'Пицца',items:[
-    ['Маргарита',400,'Тесто, соус из свежих томатов, сыр моцарелла, помидор, базилик'],
-    ['Пепперони',450,'Тесто, томатный соус, моцарелла, перец, маслины, пепперони, орегано'],
-    ['4 сыра',450,'Сливочный соус, моцарелла, гауда, дор блю, пармезан'],
-    ['Курица с грибами',450,'Сливочный соус, куриное филе, шампиньоны, зелень'],
-    ['Охотничья',450,'Сливочный и томатный соус, куриное филе, охотничьи колбаски, лук, зелень'],
-    ['BBQ с барбекю',450,'Соус BBQ, томатный соус, грибы, лук, говядина'],
-    ['Мясная',450,'Томатный соус, колбаски, курица, говядина, лук, помидоры'],
-    ['Груша горгонзола',350,'Сливочный соус, груша, горгонзола, орехи, карамель'],
-    ['Деревенская',450,'Моцарелла, сливочный соус, ветчина, сервелат, грибы, помидоры, курица'],
-    ['С морепродуктами',450,'Лосось, краб, мидии, сливочный соус, пармезан'],
-    ['Гавайская',400,'Моцарелла, томатный соус, ананас, ветчина, куриное филе'],
-    ['Perfecto острая',450,'Моцарелла, соусы, грибы, говядина, перец, колбаски, курица, спайси'],
-    ['С ветчиной и грибами',400,'Моцарелла, томатный соус, ветчина, грибы'],
-    ['Ассорти',450,'Сливочный и томатный соус, моцарелла, грибы, лук, курица, колбаски'],
-    ['Поло',450,'Томатный и сливочный соус, моцарелла, перец, лук, куриное филе'],
-    ['Мексика',450,'Томатный соус, чили, моцарелла, перец, колбаски, халапеньо, кукуруза, курица'],
-    ['Куриная',400,'Сливочный соус, куриное филе, помидоры, зелень'],
-    ['Цезарь',400,'Сливочный соус, куриное филе, помидоры, листья салата, соус Цезарь']
-  ]},
-  {category:'Холодные роллы',items:[
-    ['Филадельфия',350,'Сыр, огурец, сливочный сыр, лосось'],['Филадельфия карамель',300,'Сыр, огурец, сливочный сыр, лосось, тростниковый сахар'],['Филадельфия с угрем',350,'Сыр, нори, огурец, угорь, унаги, кунжут'],['Калифорния',300,'Сыр, краб, огурец, тобико, нори'],['Калифорния с угрем',350,'Сыр, угорь, огурец, нори, тобико'],['Калифорния с лососем',350,'Сыр, огурец, лосось, тобико, нори']
-  ]},
-  {category:'Запечённые роллы',items:[
-    ['Запечённый лосось',350,'Нори, рис, лосось, соус хот, унаги, кунжут'],['Запечённый угорь',350,'Нори, рис, сыр, угорь, соус хот'],['Запечённый краб',300,'Нори, рис, краб, сыр, соус хот'],['Запечённые мидии',300,'Нори, рис, мидии, сыр, соус хот, моцарелла'],['Запечённый Хот лосось',350,'Нори, рис, сыр, огурец, лосось, краб, соус хот'],['Запечённый Хот угорь',350,'Нори, рис, сыр, огурец, угорь, краб, соус хот'],['Запечённый Хот мидии',350,'Нори, рис, сыр, огурец, мидии, краб, соус хот'],['Запечённая креветка',350,'Нори, рис, сыр, огурец, креветка, унаги, кунжут'],['Запечённая Филадельфия',400,'Сыр, огурец, нори, лосось, яки соус, унаги'],['Запечённая курица',300,'Нори, рис, сыр, огурец, курица, соус']
-  ]},
-  {category:'Темпура',items:[
-    ['Темпура хакайна',350,'Нори, рис, лосось, краб, соус хот, унаги, кунжут, кляр'],['Темпура угорь',350,'Нори, рис, сыр, угорь, соус хот, кляр'],['Темпура краб',300,'Нори, рис, краб, сыр, соус хот, кляр'],['Темпура мидии',300,'Нори, рис, мидии, сыр, соус хот, моцарелла, кляр'],['Темпура креветка',350,'Нори, рис, сыр, огурец, креветка, унаги, кунжут, кляр'],['Темпура Филадельфия',350,'Сыр, огурец, нори, сливочный сыр, лосось, яки, унаги, кляр'],['Темпура курица',300,'Нори, рис, сыр, огурец, курица, соус, кляр']
-  ]},
-  {category:'Вок',items:[
-    ['Соба',250,'Соба, овощи WOK, соус WOK'],['Удон',200,'Удон, овощи WOK, соус WOK'],['С говядиной',300,'Говядина, удон, овощи WOK, соус WOK'],['С морепродуктами',300,'Морепродукты, удон, овощи WOK, соус WOK'],['С курицей',250,'Курица, удон, овощи WOK, соус WOK'],['Рис с курицей',250,'Рис, курица, овощи WOK, соус WOK'],['Рис с морепродуктами',300,'Рис, морепродукты, овощи WOK, соус WOK']
-  ]},
-  {category:'Новинки',items:[
-    ['Хачапури аджарский',300,'Соус, сыр, яйцо'],['Стромболи',200,'Грибы, колбасы, помидоры, сыр, соус, зелень'],['Курица гриль',650,''],['Картошка фри',150,''],['Наггетсы',150,'']
-  ]},
-  {category:'Напитки',items:[
-    ['Чай',150,''],['Чай травяной',150,''],['Кофе американо',100,''],['Капучино',150,''],['Кофе со сливками',30,''],['Кофе чёрный',50,''],['Кофе 3/1',50,'']
-  ]}
-];
 
+let MENU = [];
 let cart = JSON.parse(localStorage.getItem('vkusa_cart') || '{}');
-let profile = JSON.parse(localStorage.getItem('vkusa_profile') || '{}');
-let orderHistory = JSON.parse(localStorage.getItem('vkusa_order_history') || '[]');
+let currentUser = null;
 let demoMode = true;
-const $ = (id) => document.getElementById(id);
-const money = (n) => new Intl.NumberFormat('ru-RU').format(n) + ' ₽';
-const esc = (s) => String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 
+const $ = (id) => document.getElementById(id);
+const money = (n) => new Intl.NumberFormat('ru-RU').format(Number(n)||0) + ' ₽';
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const svgEsc = (s) => String(s).replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
 
 function dishArt(category,name,desc,price){
@@ -167,6 +127,7 @@ function updateBadge(){
   const count = Object.values(cart).reduce((s,x)=>s+x.qty,0);
   $('badge').textContent = count; $('badge').hidden = count === 0; $('topCount').textContent = count;
 }
+
 function showView(name){
   ['menuView','cartView','profileView','successView'].forEach(id => $(id).classList.remove('active'));
   $(name+'View').classList.add('active');
@@ -179,22 +140,24 @@ function showView(name){
   window.scrollTo(0,0);
 }
 
-function iconFor(cat){ if(cat==='Пицца') return '🍕'; if(cat.includes('роллы') || cat==='Темпура') return '🍣'; if(cat==='Вок') return '🍜'; if(cat==='Напитки') return '☕'; return '🍽️'; }
+function productImage(section,item){ return item.image_url || dishArt(section.category,item.name,item.description||'',item.price); }
+
+function addToCart(item){
+  const id=item.id;
+  if(!cart[id]) cart[id]={id,name:item.name,price:Number(item.price),qty:0,note:''};
+  cart[id].name=item.name; cart[id].price=Number(item.price); cart[id].qty++;
+  saveCart();
+}
 
 function renderHits(){
-  const picks = [
-    {ci:0,ii:1,tag:'ХИТ'},
-    {ci:1,ii:0,tag:'ТОП'},
-    {ci:2,ii:0,tag:'ГОРЯЧЕЕ'},
-    {ci:4,ii:4,tag:'WOK'}
-  ];
   const root=$('hitsGrid'); if(!root) return; root.innerHTML='';
-  picks.forEach(p=>{
-    const item=MENU[p.ci]?.items[p.ii]; if(!item) return;
-    const id=`${p.ci}-${p.ii}`;
-    const card=document.createElement('article'); card.className='hit-card';
-    card.innerHTML=`<div class="hit-art"><img src="${dishArt(MENU[p.ci].category,item[0],item[2]||'',item[1])}" alt="${esc(item[0])}"><span>${p.tag}</span></div><div class="hit-copy"><div><h3>${esc(item[0])}</h3><p>${esc(item[2]||MENU[p.ci].category)}</p></div><div class="hit-foot"><strong>${money(item[1])}</strong><button type="button">+</button></div></div>`;
-    card.querySelector('button').onclick=()=>{if(!cart[id]) cart[id]={id,name:item[0],price:item[1],qty:0,note:''};cart[id].qty++;saveCart();};
+  const all=MENU.flatMap(s=>s.items.map(i=>({...i,category:s.category})));
+  const picks=all.filter(x=>x.active!==false).slice(0,4);
+  const tags=['ХИТ','ТОП','ВЫБОР','WOK'];
+  picks.forEach((item,i)=>{
+    const card=document.createElement('article');card.className='hit-card';
+    card.innerHTML=`<div class="hit-art"><img src="${productImage({category:item.category},item)}" alt="${esc(item.name)}"><span>${tags[i]}</span></div><div class="hit-copy"><div><h3>${esc(item.name)}</h3><p>${esc(item.description||item.category)}</p></div><div class="hit-foot"><strong>${money(item.price)}</strong><button type="button">+</button></div></div>`;
+    card.querySelector('button').onclick=()=>addToCart(item);
     root.appendChild(card);
   });
 }
@@ -203,138 +166,121 @@ function renderMenu(){
   $('categoryStrip').innerHTML=''; $('menuRoot').innerHTML='';
   MENU.forEach((section,ci)=>{
     const chip=document.createElement('button'); chip.className='cat-chip'; chip.type='button'; chip.textContent=section.category;
-    chip.onclick=()=>{document.querySelectorAll('.cat-chip').forEach(x=>x.classList.remove('active'));chip.classList.add('active');document.getElementById('cat-'+ci).scrollIntoView({behavior:'smooth'});}; if(ci===0) chip.classList.add('active'); $('categoryStrip').appendChild(chip);
-    const sec=document.createElement('section'); sec.className='menu-section'; sec.id='cat-'+ci;
+    chip.onclick=()=>{document.querySelectorAll('.cat-chip').forEach(x=>x.classList.remove('active'));chip.classList.add('active');document.getElementById('cat-'+ci).scrollIntoView({behavior:'smooth'});};
+    if(ci===0) chip.classList.add('active'); $('categoryStrip').appendChild(chip);
+    const sec=document.createElement('section');sec.className='menu-section';sec.id='cat-'+ci;
     sec.innerHTML=`<h2>${esc(section.category)}</h2><div class="food-grid"></div>`;
     const grid=sec.querySelector('.food-grid');
-    section.items.forEach((item,ii)=>{
-      const id=`${ci}-${ii}`; const card=document.createElement('article'); card.className='food-card';
-      card.innerHTML=`<div class="food-photo"><img src="${dishArt(section.category,item[0],item[2]||'',item[1])}" alt="${esc(item[0])}"></div><div class="food-body"><div class="food-copy"><span class="food-cat">${esc(section.category)}</span><h3>${esc(item[0])}</h3><p>${esc(item[2]||'Блюдо из меню «Пиццерия Вкуса»')}</p></div><div class="food-buy"><strong>${money(item[1])}</strong><button type="button" class="add-btn">Добавить</button></div></div>`;
-      const btn=card.querySelector('.add-btn'); btn.onclick=()=>{ if(!cart[id]) cart[id]={id,name:item[0],price:item[1],qty:0,note:''}; cart[id].qty++; saveCart(); btn.textContent='Добавлено ✓'; btn.classList.add('success'); setTimeout(()=>{btn.textContent='Добавить';btn.classList.remove('success')},600); };
+    section.items.filter(x=>x.active!==false).forEach(item=>{
+      const card=document.createElement('article');card.className='food-card';
+      card.innerHTML=`<div class="food-photo"><img src="${productImage(section,item)}" alt="${esc(item.name)}" loading="lazy"></div><div class="food-body"><div class="food-copy"><span class="food-cat">${esc(section.category)}</span><h3>${esc(item.name)}</h3><p>${esc(item.description||'Блюдо из меню «Пиццерия Вкуса»')}</p></div><div class="food-buy"><strong>${money(item.price)}</strong><button type="button" class="add-btn">Добавить</button></div></div>`;
+      const btn=card.querySelector('.add-btn');
+      btn.onclick=()=>{addToCart(item);btn.textContent='Добавлено ✓';btn.classList.add('success');setTimeout(()=>{btn.textContent='Добавить';btn.classList.remove('success')},650);};
       grid.appendChild(card);
     });
     $('menuRoot').appendChild(sec);
   });
 }
-function total(){ return Object.values(cart).reduce((s,x)=>s+x.price*x.qty,0); }
-function renderCart(){
-  const entries=Object.entries(cart); $('emptyCart').hidden=entries.length>0; $('cartContent').hidden=entries.length===0; $('cartItems').innerHTML='';
-  entries.forEach(([id,x])=>{
-    const row=document.createElement('article'); row.className='cart-item';
-    row.innerHTML=`<div class="cart-row"><strong>${esc(x.name)}</strong><div class="qty"><button type="button" class="minus">−</button><b>${x.qty}</b><button type="button" class="plus">+</button></div><span class="line-price">${money(x.price*x.qty)}</span></div><input class="note" value="${esc(x.note)}" placeholder="Нюансы: без лука, добавить мясо, без соуса...">`;
-    row.querySelector('.minus').onclick=()=>{cart[id].qty--; if(cart[id].qty<=0) delete cart[id]; saveCart(); renderCart();};
-    row.querySelector('.plus').onclick=()=>{cart[id].qty++; saveCart(); renderCart();};
-    row.querySelector('.note').oninput=(e)=>{cart[id].note=e.target.value; saveCart();}; $('cartItems').appendChild(row);
-  });
-  $('subtotal').textContent=money(total()); $('total').textContent=money(total());
-}
-async function loadConfig(){
-  try{const r=await fetch('/api/config');const j=await r.json();demoMode=!!j.demoMode;$('paymentInfo').textContent=demoMode?'Демо-режим: деньги не списываются, но весь путь заказа работает.':'Боевой режим ЮKassa: после оплаты подтверждённый заказ уйдёт администратору.';}catch{$('paymentInfo').textContent='Не удалось получить настройки сервера.';}
+
+async function loadMenu(){
+  const r=await fetch('/api/menu'); const j=await r.json();
+  if(!r.ok) throw new Error(j.error||'Не удалось загрузить меню');
+  MENU=j.menu||[]; renderMenu(); renderHits();
 }
 
-function saveProfile(){
-  profile={
-    name:$('profileName').value.trim(),
-    phone:$('profilePhone').value.trim(),
-    address:$('profileAddress').value.trim()
-  };
-  localStorage.setItem('vkusa_profile',JSON.stringify(profile));
-  applyProfileToCheckout();
-  $('profileSaved').hidden=false;
-  setTimeout(()=>{$('profileSaved').hidden=true},1800);
-  renderProfileHeader();
+function saveCart(){localStorage.setItem('vkusa_cart',JSON.stringify(cart));updateBadge();}
+function updateBadge(){
+  const c=Object.values(cart).reduce((s,x)=>s+x.qty,0);
+  $('badge').textContent=c;$('badge').hidden=c===0;$('topCount').textContent=c;
 }
-function applyProfileToCheckout(){
-  if(profile.name && !$('name').value) $('name').value=profile.name;
-  if(profile.phone && !$('phone').value) $('phone').value=profile.phone;
-  if(profile.address && !$('address').value) $('address').value=profile.address;
+function total(){return Object.values(cart).reduce((s,x)=>s+Number(x.price)*x.qty,0);}
+
+function renderCart(){
+  const entries=Object.entries(cart);$('emptyCart').hidden=entries.length>0;$('cartContent').hidden=entries.length===0;$('cartItems').innerHTML='';
+  entries.forEach(([id,x])=>{
+    const row=document.createElement('article');row.className='cart-item';
+    row.innerHTML=`<div class="cart-row"><strong>${esc(x.name)}</strong><div class="qty"><button type="button" class="minus">−</button><b>${x.qty}</b><button type="button" class="plus">+</button></div><span class="line-price">${money(x.price*x.qty)}</span></div><input class="note" value="${esc(x.note)}" placeholder="Нюансы: без лука, добавить мясо, без соуса...">`;
+    row.querySelector('.minus').onclick=()=>{cart[id].qty--;if(cart[id].qty<=0)delete cart[id];saveCart();renderCart();};
+    row.querySelector('.plus').onclick=()=>{cart[id].qty++;saveCart();renderCart();};
+    row.querySelector('.note').oninput=e=>{cart[id].note=e.target.value;saveCart();};
+    $('cartItems').appendChild(row);
+  });
+  $('subtotal').textContent=money(total());$('total').textContent=money(total());
+  if(currentUser){
+    if(!$('name').value)$('name').value=currentUser.name||'';
+    $('phone').value=currentUser.phone||'';
+    if(!$('address').value)$('address').value=currentUser.address||'';
+  }
 }
-function renderProfileHeader(){
-  const name=profile.name||'Ваш профиль';
-  $('profileGreeting').textContent=profile.name?`Здравствуйте, ${profile.name}`:'Ваш профиль';
+
+async function loadConfig(){
+  try{const r=await fetch('/api/config');const j=await r.json();demoMode=!!j.demoMode;$('paymentInfo').textContent=demoMode?'Демо-оплата: заказ подтверждается сразу.':'Платёжный модуль включён.';}
+  catch{$('paymentInfo').textContent='Не удалось получить настройки сервера.';}
 }
-function renderProfile(){
-  $('profileName').value=profile.name||'';
-  $('profilePhone').value=profile.phone||'';
-  $('profileAddress').value=profile.address||'';
-  renderProfileHeader();
-  renderHistory();
+
+function setAuthMessage(text,ok=false){const el=$('authMessage');el.textContent=text;el.classList.toggle('ok',ok);}
+async function loadMe(){try{const r=await fetch('/api/me');const j=await r.json();currentUser=r.ok?j.user:null;}catch{currentUser=null}updateAuthUI();}
+function updateAuthUI(){
+  const logged=!!currentUser;$('authGate').hidden=logged;$('profileContent').hidden=!logged;
+  if(logged){
+    $('profileGreeting').textContent=currentUser.name?`Здравствуйте, ${currentUser.name}`:'Ваш профиль';
+    $('profileName').value=currentUser.name||'';$('profilePhone').value=currentUser.phone||'';$('profileAddress').value=currentUser.address||'';
+    $('profilePhoneBadge').textContent=currentUser.phone||'';
+  }
 }
-function renderHistory(){
-  $('historyCount').textContent=orderHistory.length;
-  $('historyEmpty').hidden=orderHistory.length>0;
-  $('orderHistory').innerHTML='';
-  orderHistory.forEach((o,idx)=>{
+async function sendCode(){
+  const phone=$('authPhone').value.trim();if(!phone)return setAuthMessage('Введите номер телефона.');
+  $('sendCodeBtn').disabled=true;setAuthMessage('Отправляем код…');
+  try{const r=await fetch('/api/auth/send-code',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone})});const j=await r.json();if(!r.ok)throw new Error(j.error||'Ошибка');$('phoneStep').hidden=true;$('codeStep').hidden=false;setAuthMessage(j.message||'Код отправлен.',true);}
+  catch(e){setAuthMessage(e.message)}finally{$('sendCodeBtn').disabled=false}
+}
+async function verifyCode(){
+  const phone=$('authPhone').value.trim(),code=$('authCode').value.trim();if(!code)return setAuthMessage('Введите код.');
+  $('verifyCodeBtn').disabled=true;setAuthMessage('Проверяем…');
+  try{const r=await fetch('/api/auth/verify-code',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone,code})});const j=await r.json();if(!r.ok)throw new Error(j.error||'Неверный код');currentUser=j.user;updateAuthUI();await renderHistory();setAuthMessage('');}
+  catch(e){setAuthMessage(e.message)}finally{$('verifyCodeBtn').disabled=false}
+}
+async function logout(){await fetch('/api/auth/logout',{method:'POST'});currentUser=null;updateAuthUI();$('codeStep').hidden=true;$('phoneStep').hidden=false;$('authCode').value='';}
+async function saveProfile(){
+  if(!currentUser)return;
+  const body={name:$('profileName').value.trim(),address:$('profileAddress').value.trim()};
+  const r=await fetch('/api/me',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const j=await r.json();
+  if(!r.ok)return alert(j.error||'Не удалось сохранить');currentUser=j.user;updateAuthUI();$('profileSaved').hidden=false;setTimeout(()=>$('profileSaved').hidden=true,1600);
+}
+async function renderProfile(){updateAuthUI();if(currentUser)await renderHistory();}
+function statusLabel(s){return {new:'Принят',cooking:'Готовится',courier:'В пути',delivered:'Доставлен',cancelled:'Отменён',paid:'Оплачен'}[s]||s;}
+async function renderHistory(){
+  if(!currentUser)return;
+  const r=await fetch('/api/my-orders');const j=await r.json();if(!r.ok)return;
+  const orders=j.orders||[];$('historyCount').textContent=orders.length;$('historyEmpty').hidden=orders.length>0;$('orderHistory').innerHTML='';
+  orders.forEach(o=>{
     const card=document.createElement('article');card.className='history-item';
-    const when=new Date(o.date);
-    const dateText=isNaN(when)?o.date:when.toLocaleString('ru-RU',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
-    card.innerHTML=`<div class="history-top"><div><span class="history-status">✓ Выполнен</span><h3>Заказ ${esc(o.orderId||'#'+(orderHistory.length-idx))}</h3><p>${dateText}</p></div><strong>${money(o.total||0)}</strong></div><div class="history-items">${(o.items||[]).map(x=>`<span>${esc(x.name)} × ${x.qty}</span>`).join('')}</div><button class="repeat-btn" type="button">Повторить заказ</button>`;
-    card.querySelector('.repeat-btn').onclick=()=>{
-      (o.items||[]).forEach(x=>{
-        const id=x.id;
-        if(!id)return;
-        if(!cart[id])cart[id]={id,name:x.name,price:x.price,qty:0,note:x.note||''};
-        cart[id].qty+=x.qty;
-      });
-      saveCart();showView('cart');
-    };
+    const dateText=new Date(o.created_at).toLocaleString('ru-RU',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+    card.innerHTML=`<div class="history-top"><div><span class="history-status">${esc(statusLabel(o.status))}</span><h3>Заказ #${esc(String(o.number||o.id).slice(-6))}</h3><p>${dateText}</p></div><strong>${money(o.total)}</strong></div><div class="history-items">${(o.items||[]).map(x=>`<span>${esc(x.name)} × ${x.qty}</span>`).join('')}</div><button class="repeat-btn" type="button">Повторить заказ</button>`;
+    card.querySelector('.repeat-btn').onclick=()=>{(o.items||[]).forEach(x=>{if(!cart[x.id])cart[x.id]={id:x.id,name:x.name,price:x.price,qty:0,note:x.note||''};cart[x.id].qty+=x.qty;});saveCart();showView('cart')};
     $('orderHistory').appendChild(card);
   });
 }
-function rememberOrder(o){
-  if(!o || !o.id) return;
-  if(orderHistory.some(x=>String(x.orderId)===String(o.id))) return;
-  orderHistory.unshift({
-    orderId:o.id,
-    date:new Date().toISOString(),
-    total:o.total,
-    items:(o.items||[]).map(x=>({id:x.id,name:x.name,price:x.price,qty:x.qty,note:x.note||''}))
-  });
-  orderHistory=orderHistory.slice(0,30);
-  localStorage.setItem('vkusa_order_history',JSON.stringify(orderHistory));
-}
 
 async function checkout(){
-  const name=$('name').value.trim(), phone=$('phone').value.trim(), address=$('address').value.trim();
-  if(name||phone||address){profile={name,phone,address};localStorage.setItem('vkusa_profile',JSON.stringify(profile));} if(!name||!phone||!address){alert('Заполни имя, телефон и адрес.');return;}
-  const items=Object.values(cart).map(x=>({id:x.id,qty:x.qty,note:x.note})); if(!items.length){alert('Корзина пустая.');return;}
-  $('checkoutBtn').disabled=true; $('checkoutBtn').textContent='Создаём заказ…';
-  try{
-    const r=await fetch('/api/create-order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({items,customer:{name,phone,address,comment:$('orderNote').value.trim()}})}); const j=await r.json(); if(!r.ok) throw new Error(j.error||'Ошибка');
-    if(j.redirectUrl){ window.location.href=j.redirectUrl; return; }
-    throw new Error('Нет ссылки на оплату');
-  }catch(e){alert('Не получилось оформить: '+e.message);$('checkoutBtn').disabled=false;$('checkoutBtn').textContent='Оплатить и оформить';}
+  if(!currentUser){alert('Сначала войдите по номеру телефона.');showView('profile');return;}
+  const name=$('name').value.trim(),address=$('address').value.trim();if(!name||!address){alert('Заполните имя и адрес.');return;}
+  const items=Object.values(cart).map(x=>({id:x.id,qty:x.qty,note:x.note}));if(!items.length){alert('Корзина пустая.');return;}
+  $('checkoutBtn').disabled=true;$('checkoutBtn').textContent='Создаём заказ…';
+  try{const r=await fetch('/api/create-order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({items,customer:{name,address,comment:$('orderNote').value.trim()}})});const j=await r.json();if(!r.ok)throw new Error(j.error||'Ошибка');if(j.redirectUrl){location.href=j.redirectUrl;return;}throw new Error('Сервер не вернул ссылку');}
+  catch(e){alert('Не получилось оформить: '+e.message);$('checkoutBtn').disabled=false;$('checkoutBtn').textContent='Оплатить и оформить';}
 }
 async function loadSuccess(orderId){
   showView('success');
-  try{
-    const r=await fetch('/api/order/'+encodeURIComponent(orderId)); const o=await r.json(); if(!r.ok) throw new Error(o.error||'Заказ не найден');
-    $('successTitle').textContent=o.status==='paid'?'Оплата подтверждена':'Заказ создан'; $('successSub').textContent=o.status==='paid'?'Заказ готов к передаче администратору.':'Платёж ещё обрабатывается.';
-    $('receipt').innerHTML=`<div class="receipt-box">${o.items.map(x=>`<div class="receipt-line"><div><strong>${esc(x.name)} × ${x.qty}</strong>${x.note?`<div class="receipt-note">↳ ${esc(x.note)}</div>`:''}</div><b>${money(x.price*x.qty)}</b></div>`).join('')}<div class="receipt-total"><span>Итого</span><span>${money(o.total)}</span></div></div>`;
-    if(o.status==='paid'){rememberOrder(o);cart={};saveCart();}
-  }catch(e){$('successTitle').textContent='Не удалось проверить заказ';$('successSub').textContent=e.message;}
+  try{const r=await fetch('/api/order/'+encodeURIComponent(orderId));const o=await r.json();if(!r.ok)throw new Error(o.error||'Заказ не найден');$('successTitle').textContent='Заказ принят';$('successSub').textContent=`Статус: ${statusLabel(o.status)}`;$('receipt').innerHTML=`<div class="receipt-box">${o.items.map(x=>`<div class="receipt-line"><div><strong>${esc(x.name)} × ${x.qty}</strong>${x.note?`<div class="receipt-note">↳ ${esc(x.note)}</div>`:''}</div><b>${money(x.price*x.qty)}</b></div>`).join('')}<div class="receipt-total"><span>Итого</span><span>${money(o.total)}</span></div></div>`;cart={};saveCart();}
+  catch(e){$('successTitle').textContent='Не удалось проверить заказ';$('successSub').textContent=e.message;}
 }
 
-$('menuTab').onclick=()=>showView('menu');
-$('profileTab').onclick=()=>showView('profile');
-$('cartTab').onclick=()=>showView('cart');
-$('topCartBtn').onclick=()=>showView('cart');
-$('topProfileBtn').onclick=()=>showView('profile');
-$('brandBtn').onclick=()=>showView('menu');
-$('heroMenuBtn').onclick=()=>document.querySelector('.menu-heading').scrollIntoView({behavior:'smooth'});
-$('heroProfileBtn').onclick=()=>showView('profile');
-$('goMenuBtn').onclick=()=>showView('menu');
-$('backMenuBtn').onclick=()=>showView('menu');
-$('saveProfileBtn').onclick=saveProfile;
-$('clearBtn').onclick=()=>{if(Object.keys(cart).length&&confirm('Очистить корзину?')){cart={};saveCart();renderCart();}};
-$('checkoutBtn').onclick=checkout;
+$('menuTab').onclick=()=>showView('menu');$('profileTab').onclick=()=>showView('profile');$('cartTab').onclick=()=>showView('cart');
+$('topCartBtn').onclick=()=>showView('cart');$('topProfileBtn').onclick=()=>showView('profile');$('brandBtn').onclick=()=>showView('menu');
+$('heroMenuBtn').onclick=()=>document.querySelector('.menu-heading').scrollIntoView({behavior:'smooth'});$('heroProfileBtn').onclick=()=>showView('profile');
+$('goMenuBtn').onclick=()=>showView('menu');$('backMenuBtn').onclick=()=>showView('menu');$('saveProfileBtn').onclick=saveProfile;
+$('sendCodeBtn').onclick=sendCode;$('verifyCodeBtn').onclick=verifyCode;$('changePhoneBtn').onclick=()=>{$('codeStep').hidden=true;$('phoneStep').hidden=false;setAuthMessage('')};$('logoutBtn').onclick=logout;
+$('clearBtn').onclick=()=>{if(Object.keys(cart).length&&confirm('Очистить корзину?')){cart={};saveCart();renderCart();}};$('checkoutBtn').onclick=checkout;
 
-renderMenu();
-renderHits();
-updateBadge();
-loadConfig();
-applyProfileToCheckout();
-renderProfileHeader();
-
-const qs=new URLSearchParams(location.search);
-if(qs.get('payment_return')==='1'&&qs.get('order_id')) loadSuccess(qs.get('order_id'));
+(async function init(){updateBadge();await Promise.all([loadConfig(),loadMe()]);try{await loadMenu()}catch(e){console.error(e);$('menuRoot').innerHTML='<p>Не удалось загрузить меню.</p>'}const qs=new URLSearchParams(location.search);if(qs.get('payment_return')==='1'&&qs.get('order_id'))loadSuccess(qs.get('order_id'));})();

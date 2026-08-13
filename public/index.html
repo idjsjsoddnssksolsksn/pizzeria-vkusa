@@ -142,10 +142,32 @@
       <div class="profile-title">
         <span class="eyebrow">ЛИЧНЫЙ КАБИНЕТ</span>
         <h1 id="profileGreeting">Ваш профиль</h1>
-        <p>Данные для быстрого заказа и история покупок на этом устройстве.</p>
+        <p>Данные для быстрого заказа и настоящая история покупок с сервера.</p>
       </div>
     </div>
 
+    <section id="authGate" class="auth-gate">
+      <div class="auth-icon">✦</div>
+      <span class="mini-label">ВХОД ПО НОМЕРУ</span>
+      <h2>Ваш профиль и заказы — на любом устройстве</h2>
+      <p>Введите номер телефона. Мы отправим одноразовый код по SMS.</p>
+      <div id="phoneStep" class="auth-step">
+        <input id="authPhone" type="tel" inputmode="tel" placeholder="+7 999 123-45-67">
+        <button id="sendCodeBtn" type="button">Получить код</button>
+      </div>
+      <div id="codeStep" class="auth-step" hidden>
+        <input id="authCode" type="text" inputmode="numeric" maxlength="8" placeholder="Код из SMS">
+        <button id="verifyCodeBtn" type="button">Войти</button>
+        <button id="changePhoneBtn" class="auth-link" type="button">Изменить номер</button>
+      </div>
+      <p id="authMessage" class="auth-message"></p>
+    </section>
+
+    <div id="profileContent" hidden>
+      <div class="profile-session-row">
+        <span id="profilePhoneBadge"></span>
+        <button id="logoutBtn" type="button">Выйти</button>
+      </div>
     <div class="profile-layout">
       <section class="profile-card">
         <div class="profile-card-head">
@@ -153,7 +175,7 @@
           <span class="profile-lock">⌁</span>
         </div>
         <label>Имя<input id="profileName" type="text" autocomplete="name" placeholder="Ваше имя"></label>
-        <label>Телефон<input id="profilePhone" type="tel" autocomplete="tel" placeholder="+7 999 123-45-67"></label>
+        <label>Телефон<input id="profilePhone" type="tel" readonly></label>
         <label>Адрес по умолчанию<input id="profileAddress" type="text" autocomplete="street-address" placeholder="Улица, дом, квартира"></label>
         <button id="saveProfileBtn" class="profile-save" type="button">Сохранить данные</button>
         <p id="profileSaved" class="save-note" hidden>✓ Данные сохранены</p>
@@ -171,6 +193,7 @@
         </div>
         <div id="orderHistory" class="order-history"></div>
       </section>
+    </div>
     </div>
   </main>
 </section>

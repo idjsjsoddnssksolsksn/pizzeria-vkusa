@@ -595,3 +595,12 @@ body{
   .profile-title p{font-size:11px}
   .profile-card,.history-card{border-radius:22px;padding:17px}
 }
+
+
+/* ===== SERVER AUTH + PROFILE ===== */
+.auth-gate{max-width:620px;margin:18px auto 0;padding:28px;border-radius:28px;background:linear-gradient(145deg,#17130f,#2d2119);color:#fff;border:1px solid rgba(201,154,88,.25);box-shadow:0 30px 75px rgba(34,22,13,.17);text-align:center}
+.auth-gate .auth-icon{width:58px;height:58px;margin:0 auto 14px;border-radius:50%;display:grid;place-items:center;background:rgba(218,180,119,.1);border:1px solid rgba(218,180,119,.35);color:#e0b777;font-size:24px}
+.auth-gate h2{font:700 28px/1.1 Georgia,serif;margin:8px auto;max-width:480px}.auth-gate p{color:#b8aaa0;font-size:13px;line-height:1.5}
+.auth-step{display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:18px}.auth-step input{border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.07);color:#fff;border-radius:15px;padding:14px;outline:0;font-size:16px}.auth-step button{border:0;border-radius:15px;padding:0 18px;background:#d1a05f;color:#1c140e;font-weight:950}.auth-step .auth-link{grid-column:1/-1;background:transparent;color:#c7b8ab;padding:8px}.auth-message{min-height:20px;margin:10px 0 0!important;color:#f0a7a0!important}.auth-message.ok{color:#86d4a9!important}
+.profile-session-row{display:flex;justify-content:flex-end;align-items:center;gap:10px;margin:14px 0}.profile-session-row span{font-size:12px;color:#776d63}.profile-session-row button{border:1px solid #ded4c8;background:#fffaf4;border-radius:999px;padding:8px 12px;font-weight:850;color:#5d493a}
+@media(max-width:650px){.auth-gate{padding:22px 16px;border-radius:22px}.auth-step{grid-template-columns:1fr}.auth-step button{min-height:46px}.auth-gate h2{font-size:23px}}
